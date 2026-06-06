@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paisley Pie Co. — Causeyside Street, Paisley</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red:      #ffffff;
+      --red-dark: #a80f0f;
+      --black:    #000000;
+      --charcoal: #0d0d0d;
+      --grey:     #181818;
+      --stone:    #efefeb;
+      --off:      #f8f6f2;
+      --muted:    #6a6560;
+      --r: 10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--off);
+      color: var(--black);
+      line-height: 1.6;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 62px;
+      background: var(--black);
+      border-bottom: 3px solid #ffffff;
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 0.7rem;
+    }
+
+    .nav-badge-svg { width: 34px; height: 34px; flex-shrink: 0; }
+
+    .nav-wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.45rem; letter-spacing: 0.06em;
+      color: var(--off); line-height: 1;
+    }
+
+    nav ul { list-style: none; display: flex; gap: 2rem; }
+    nav ul a {
+      text-decoration: none; font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: rgba(250,249,247,0.55); transition: color 0.2s;
+    }
+    nav ul a:hover { color: var(--off); }
+
+    .nav-cta {
+      background: #ffffff; color: #000000 !important;
+      padding: 0.4rem 1.1rem; border-radius: 6px;
+    }
+    .nav-cta:hover { background: #dddddd; opacity: 1 !important; }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh; position: relative;
+      display: flex; align-items: flex-end; overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: url('storefront.jpg') center 35% / cover no-repeat;
+    }
+
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.97) 0%,
+        rgba(0,0,0,0.65) 50%,
+        rgba(0,0,0,0.2) 100%
+      );
+    }
+
+    .hero-content {
+      position: relative; z-index: 2;
+      padding: 0 7vw 9vh; max-width: 860px;
+    }
+
+    .hero-eyebrow {
+      display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .hero-line { width: 36px; height: 2px; background: #ffffff; }
+    .hero-eyebrow span {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.15em;
+      text-transform: uppercase; color: #ffffff;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4.5rem, 11vw, 8rem);
+      color: var(--off); line-height: 0.93; letter-spacing: 0.02em;
+      margin-bottom: 1.5rem;
+    }
+    h1 .red { color: #ffffff; }
+
+    .hero-sub {
+      font-size: 1rem; color: rgba(250,249,247,0.6);
+      max-width: 500px; margin-bottom: 2.5rem; line-height: 1.75;
+    }
+
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-block; padding: 0.85rem 2rem;
+      border-radius: var(--r); font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      text-decoration: none; transition: transform 0.15s, opacity 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.35); }
+
+    .btn-red     { background: #ffffff; color: #000000; }
+    .btn-red:hover { background: #dddddd; }
+    .btn-outline { background: transparent; color: var(--off); border: 1.5px solid rgba(250,249,247,0.3); }
+    .btn-outline:hover { border-color: var(--off); }
+    .btn-dark    { background: var(--charcoal); color: var(--off); }
+    .btn-stone   { background: var(--stone); color: var(--black); }
+
+    .hero-stats {
+      display: flex; gap: 2.5rem; flex-wrap: wrap; margin-top: 3rem;
+      padding-top: 2rem; border-top: 1px solid rgba(250,249,247,0.1);
+    }
+    .hstat strong {
+      display: block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #ffffff; line-height: 1;
+    }
+    .hstat span {
+      font-size: 0.7rem; color: rgba(250,249,247,0.4);
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ─── PRESS STRIP ─── */
+    .press {
+      background: var(--charcoal);
+      border-top: 1px solid rgba(250,249,247,0.06);
+      padding: 1rem 5vw;
+      display: flex; align-items: center; gap: 1.5rem; overflow-x: auto;
+    }
+    .press-label {
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: rgba(250,249,247,0.3);
+      white-space: nowrap; padding-right: 1.25rem;
+      border-right: 1px solid rgba(250,249,247,0.1); flex-shrink: 0;
+    }
+    .press-items { display: flex; gap: 2rem; flex-wrap: nowrap; }
+    .press-item {
+      font-size: 0.78rem; font-weight: 600; color: rgba(250,249,247,0.45);
+      white-space: nowrap; letter-spacing: 0.03em;
+    }
+
+    /* ─── SECTIONS ─── */
+    section { padding: 7rem 5vw; }
+
+    .label {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: #ffffff; margin-bottom: 1rem;
+    }
+    .label::before {
+      content: ''; display: block; width: 18px; height: 2px; background: #ffffff;
+    }
+
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 5vw, 4rem); letter-spacing: 0.03em;
+      line-height: 0.95; margin-bottom: 1.25rem;
+    }
+
+    /* ─── STORY ─── */
+    #story { background: var(--black); }
+    #story h2 { color: var(--off); }
+
+    .story-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 5rem; align-items: center; max-width: 1100px; margin: 0 auto;
+    }
+
+    .story-img { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4/5; }
+    .story-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .story-img-foot {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.96) 0%, transparent 100%);
+      padding: 2.5rem 1.5rem 1.5rem;
+    }
+    .story-img-foot p {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem; color: #ffffff; letter-spacing: 0.07em;
+    }
+
+    .story-text p {
+      color: rgba(250,249,247,0.6); margin-bottom: 1rem;
+      font-size: 0.97rem; line-height: 1.8;
+    }
+    .story-text p strong { color: var(--off); }
+
+    .story-quote {
+      border-left: 3px solid #ffffff;
+      padding-left: 1.25rem; margin: 2rem 0;
+      font-family: 'Playfair Display', serif;
+      font-style: italic; font-size: 1.12rem;
+      color: var(--off); line-height: 1.55;
+    }
+    .story-quote cite {
+      display: block; font-size: 0.75rem; font-style: normal;
+      color: #ffffff; margin-top: 0.5rem;
+      font-family: 'Inter', sans-serif; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ─── VIRAL ─── */
+    .viral {
+      background: #111111;
+      border-top: 3px solid #ffffff;
+      border-bottom: 3px solid #ffffff;
+      padding: 2.5rem 5vw;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 2rem; flex-wrap: wrap;
+    }
+    .viral h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      color: #ffffff; letter-spacing: 0.04em; line-height: 1; margin-bottom: 0.4rem;
+    }
+    .viral p { color: rgba(255,255,255,0.6); font-size: 0.9rem; max-width: 400px; }
+
+    .viral-nums { display: flex; gap: 1.5rem; flex-shrink: 0; }
+    .vn {
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(250,249,247,0.15);
+      border-radius: var(--r); padding: 1.25rem 2rem;
+    }
+    .vn strong {
+      display: block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem; color: var(--off); line-height: 1;
+    }
+    .vn span { font-size: 0.68rem; color: rgba(250,249,247,0.5); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ─── MENU ─── */
+    #menu { background: var(--charcoal); }
+    #menu h2 { color: var(--off); }
+
+    .menu-header { text-align: center; margin-bottom: 3.5rem; }
+    .menu-header p { color: rgba(250,249,247,0.5); font-size: 0.95rem; max-width: 480px; margin: 0 auto; }
+
+    .menu-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+      gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+    }
+
+    .pie-card {
+      background: var(--grey); border-radius: 14px; overflow: hidden;
+      transition: transform 0.22s, box-shadow 0.22s;
+    }
+    .pie-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .pie-card-img { height: 190px; overflow: hidden; position: relative; }
+    .pie-card-img img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.4s; filter: brightness(0.88) saturate(1.1);
+    }
+    .pie-card:hover .pie-card-img img { transform: scale(1.06); filter: brightness(1) saturate(1.1); }
+
+    .pie-tag {
+      position: absolute; top: 0.7rem; left: 0.7rem;
+      background: #ffffff; color: #000000;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; padding: 0.25rem 0.65rem; border-radius: 5px;
+    }
+    .pie-tag.dark { background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); }
+
+    .pie-body { padding: 1.4rem; border-top: 1px solid rgba(250,249,247,0.06); }
+    .pie-body h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem; color: var(--off); letter-spacing: 0.04em;
+      margin-bottom: 0.4rem; line-height: 1;
+    }
+    .pie-body p { font-size: 0.83rem; color: rgba(250,249,247,0.48); line-height: 1.55; }
+    .pie-price {
+      margin-top: 1rem; display: flex; align-items: center; justify-content: space-between;
+    }
+    .pie-price strong { color: #ffffff; font-size: 1rem; }
+
+    /* ─── REQUEST BOOK ─── */
+    .request {
+      background: var(--black); padding: 4rem 5vw; text-align: center;
+    }
+    .request h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--off); letter-spacing: 0.04em; margin-bottom: 0.6rem;
+    }
+    .request p { color: rgba(250,249,247,0.5); max-width: 500px; margin: 0 auto 2rem; font-size: 0.95rem; }
+
+    /* ─── ST MIRREN ─── */
+    .stmirren {
+      position: relative; overflow: hidden;
+      background: var(--black);
+      padding: 4rem 5vw;
+    }
+
+    /* Black & white vertical stripes background */
+    .stmirren::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.025) 0px,
+        rgba(255,255,255,0.025) 28px,
+        transparent 28px,
+        transparent 56px
+      );
+      pointer-events: none;
+    }
+
+    .stmirren-inner {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 4rem; flex-wrap: wrap;
+      max-width: 960px; margin: 0 auto;
+    }
+
+    .stmirren-badge {
+      flex-shrink: 0;
+      width: 140px; height: 140px;
+      background: var(--charcoal);
+      border: 3px solid rgba(250,249,247,0.15);
+      border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 1rem;
+    }
+
+    .stmirren-badge .sm-crest { font-size: 3rem; line-height: 1; margin-bottom: 0.35rem; }
+    .stmirren-badge p {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.75rem; letter-spacing: 0.1em; color: var(--off);
+      line-height: 1.2;
+    }
+
+    .stmirren-text { flex: 1; min-width: 260px; }
+
+    .sm-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      color: rgba(250,249,247,0.7);
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.35rem 0.85rem; border-radius: 999px; margin-bottom: 1.25rem;
+    }
+
+    .stmirren-text h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 3.5vw, 2.8rem); letter-spacing: 0.04em; line-height: 1;
+      color: var(--off); margin-bottom: 0.75rem;
+    }
+
+    .stmirren-text p {
+      color: rgba(250,249,247,0.6); font-size: 0.95rem; line-height: 1.75; max-width: 480px;
+    }
+
+    .sm-colours {
+      display: flex; gap: 0.5rem; align-items: center; margin-top: 1.5rem;
+    }
+    .sm-swatch {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid rgba(250,249,247,0.2);
+    }
+    .sm-colours span { font-size: 0.75rem; color: rgba(250,249,247,0.35); margin-left: 0.25rem; }
+
+    /* ─── REVIEWS ─── */
+    #reviews { background: var(--off); }
+    #reviews .label { color: #000000; }
+    #reviews .label::before { background: #000000; }
+
+    .reviews-top {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      flex-wrap: wrap; gap: 2rem; margin-bottom: 3rem;
+      max-width: 1100px; margin-left: auto; margin-right: auto;
+    }
+
+    .reviews-score { display: flex; align-items: center; gap: 0.75rem; }
+    .rs-big {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 4.5rem; color: var(--black); line-height: 1;
+    }
+    .rs-detail .stars { color: #000000; font-size: 1.1rem; }
+    .rs-detail p { font-size: 0.8rem; color: var(--muted); }
+
+    .reviews-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem; max-width: 1100px; margin: 0 auto;
+    }
+
+    .rc {
+      background: var(--stone); border-radius: 12px; padding: 1.75rem;
+      position: relative; overflow: hidden;
+    }
+    .rc::after {
+      content: '"'; position: absolute; bottom: -2rem; right: 0.75rem;
+      font-family: Georgia, serif; font-size: 10rem;
+      color: rgba(0,0,0,0.06); line-height: 1; pointer-events: none;
+    }
+    .rc-stars { color: #000000; font-size: 0.9rem; margin-bottom: 0.75rem; }
+    .rc-text { font-size: 0.92rem; color: #333; line-height: 1.65; font-style: italic; margin-bottom: 1.25rem; }
+    .rc-name { font-weight: 700; font-size: 0.82rem; color: var(--black); }
+    .rc-src  { font-size: 0.72rem; color: var(--muted); }
+
+    /* ─── HOURS ─── */
+    #hours { background: var(--black); }
+    #hours h2 { color: var(--off); }
+
+    .hours-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; max-width: 960px; margin: 0 auto;
+    }
+
+    .ht-card { border: 1px solid rgba(250,249,247,0.1); border-radius: 14px; overflow: hidden; }
+    .ht-head { background: #ffffff; padding: 1rem 1.5rem; }
+    .ht-head h3 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem;
+      color: #000000; letter-spacing: 0.05em;
+    }
+    .ht-body { padding: 1rem 1.5rem 1.5rem; }
+    table.ht { width: 100%; border-collapse: collapse; }
+    table.ht td { padding: 0.6rem 0; font-size: 0.9rem; color: rgba(250,249,247,0.55); border-bottom: 1px solid rgba(250,249,247,0.05); }
+    table.ht td:last-child { text-align: right; font-weight: 600; color: rgba(250,249,247,0.85); }
+    table.ht tr.today td { color: #ffffff; }
+    table.ht tr:last-child td { border-bottom: none; }
+
+    .contact-list { display: flex; flex-direction: column; gap: 1rem; }
+
+    .ci {
+      display: flex; gap: 1rem; align-items: center;
+      background: var(--charcoal); border: 1px solid rgba(250,249,247,0.08);
+      border-radius: var(--r); padding: 1.1rem 1.25rem;
+    }
+    .ci-icon {
+      width: 38px; height: 38px; background: #ffffff;
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 1rem; flex-shrink: 0;
+    }
+    .ci-body strong { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em; color: #ffffff; margin-bottom: 0.15rem; }
+    .ci-body a, .ci-body span { font-size: 0.9rem; color: var(--off); font-weight: 500; text-decoration: none; }
+    .ci-body a:hover { color: rgba(250,249,247,0.7); }
+
+    /* ─── MAP ─── */
+    .map { height: 320px; overflow: hidden; }
+    .map iframe { width: 100%; height: 100%; border: none; filter: grayscale(40%) contrast(1.05); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #050403; border-top: 3px solid #ffffff;
+      padding: 2rem 5vw;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem;
+      color: var(--off); letter-spacing: 0.06em;
+    }
+    footer p { font-size: 0.78rem; color: rgba(250,249,247,0.25); }
+    footer a { color: rgba(250,249,247,0.25); text-decoration: none; }
+    footer a:hover { color: rgba(250,249,247,0.6); }
+
+    /* ─── HAMBURGER ─── */
+    .hamburger {
+      display: none; flex-direction: column; justify-content: center;
+      gap: 5px; cursor: pointer; padding: 4px; background: none; border: none;
+      z-index: 300;
+    }
+    .hamburger span {
+      display: block; width: 24px; height: 2px; background: #fff;
+      border-radius: 2px; transition: transform 0.3s, opacity 0.3s;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* ─── MOBILE MENU OVERLAY ─── */
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; z-index: 250;
+      background: #000;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 0.25rem;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 8vw, 3rem); letter-spacing: 0.06em;
+      color: #fff; text-decoration: none;
+      padding: 0.5rem 2rem; transition: opacity 0.2s;
+      border-bottom: 1px solid rgba(255,255,255,0.08); width: 100%; text-align: center;
+    }
+    .mobile-menu a:hover { opacity: 0.6; }
+    .mobile-menu a.cta { color: #fff; background: rgba(255,255,255,0.1); }
+    .mobile-menu-close {
+      position: absolute; top: 1.25rem; right: 5vw;
+      font-size: 1.8rem; color: rgba(255,255,255,0.5);
+      background: none; border: none; cursor: pointer; line-height: 1;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      /* Nav */
+      nav ul { display: none; }
+      .hamburger { display: flex; }
+
+      /* Global section padding */
+      section { padding: 4rem 5vw; }
+
+      /* Hero */
+      h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
+      .hero-content { padding: 0 5vw 6vh; }
+      .hero-stats { gap: 1.5rem; }
+      .hero-stats { display: grid; grid-template-columns: 1fr 1fr; }
+      .hstat strong { font-size: 1.6rem; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { text-align: center; }
+
+      /* Press */
+      .press { gap: 1rem; padding: 0.85rem 5vw; }
+
+      /* h2 */
+      h2 { font-size: clamp(2.2rem, 8vw, 3rem); }
+
+      /* Story */
+      .story-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .story-img { aspect-ratio: 3/2; }
+
+      /* Viral */
+      .viral { flex-direction: column; gap: 1.5rem; }
+      .viral-nums { width: 100%; justify-content: center; gap: 1rem; }
+      .vn { padding: 1rem 1.5rem; }
+
+      /* Menu */
+      .menu-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .pie-card-img { height: 220px; }
+
+      /* Reviews */
+      .reviews-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .reviews-grid { grid-template-columns: 1fr; }
+      .rs-big { font-size: 3.5rem; }
+
+      /* St Mirren */
+      .stmirren-inner { flex-direction: column; gap: 2rem; }
+      .stmirren-badge { width: 110px; height: 110px; }
+
+      /* Hours */
+      .hours-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+
+      /* Contact */
+      .contact-list .btn { width: 100%; text-align: center; }
+    }
+
+    @media (max-width: 400px) {
+      h1 { font-size: 3rem; }
+      .hero-stats { grid-template-columns: 1fr 1fr; }
+      .vn { padding: 0.85rem 1rem; }
+      .vn strong { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" id="menu-close" aria-label="Close menu">✕</button>
+  <a href="#story"    onclick="closeMenu()">Our Story</a>
+  <a href="menu.html">Full Menu</a>
+  <a href="deals.html">Deals</a>
+  <a href="news.html">News</a>
+  <a href="#reviews"  onclick="closeMenu()">Reviews</a>
+  <a href="pie-ideas.html">Pie Ideas</a>
+  <a href="suggestions.html">Suggest a Change</a>
+  <a href="#hours"    onclick="closeMenu()">Find Us</a>
+  <a href="order.html" class="cta">Order Online →</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg class="nav-badge-svg" viewBox="0 0 34 34" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="17" cy="17" r="16" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+      <circle cx="17" cy="17" r="12.5" stroke="#ffffff" stroke-width="0.6" stroke-dasharray="2 2" fill="none"/>
+      <text x="17" y="11.5" text-anchor="middle" font-family="sans-serif" font-size="3.8" font-weight="900" fill="#ffffff" letter-spacing="0.4">PAISLEY</text>
+      <text x="17" y="20" text-anchor="middle" font-size="7" fill="#ffffff">🥧</text>
+      <text x="17" y="27.5" text-anchor="middle" font-family="sans-serif" font-size="3.4" font-weight="900" fill="#ffffff" letter-spacing="0.4">PIE CO.</text>
+    </svg>
+    <span class="nav-wordmark">PAISLEY PIE CO.</span>
+  </div>
+  <ul>
+    <li><a href="#story">Our Story</a></li>
+    <li><a href="menu.html">Full Menu</a></li>
+    <li><a href="deals.html">Deals</a></li>
+    <li><a href="news.html">News</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#hours">Find Us</a></li>
+    <li><a href="order.html" class="nav-cta">Order Online</a></li>
+  </ul>
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="hero-line"></div>
+      <span>25 Causeyside Street · Paisley · Est. 2023</span>
+    </div>
+    <h1>PROPER<br><span class="red">SCOTTISH</span><br>PIES.</h1>
+    <p class="hero-sub">From a tiny Bridge Street shop to our flagship store on Causeyside Street and 5 million views — Paisley Pie Co. is the pie shop putting Scotland on the map, one golden crust at a time.</p>
+    <div class="hero-actions">
+      <a href="order.html" class="btn btn-red">Order Online</a>
+      <a href="menu.html" class="btn btn-outline">See the Full Menu</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><strong>4.2★</strong><span>Google Rating</span></div>
+      <div class="hstat"><strong>5M+</strong><span>Social Views</span></div>
+      <div class="hstat"><strong>#2</strong><span>Bakery in Paisley</span></div>
+      <div class="hstat"><strong>26K</strong><span>Instagram</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRESS -->
+<div class="press">
+  <div class="press-label">As Seen In</div>
+  <div class="press-items">
+    <div class="press-item">📺 BBC News</div>
+    <div class="press-item">📰 The Gazette</div>
+    <div class="press-item">🏛 Scottish Parliament</div>
+    <div class="press-item">🍽 Foodie Explorers</div>
+    <div class="press-item">🏆 Young Business Person of the Year</div>
+  </div>
+</div>
+
+<!-- STORY -->
+<section id="story">
+  <div class="story-grid">
+    <div class="story-img">
+      <img src="interior.jpg" alt="Paisley Pie Co Causeyside Street display counter stacked with freshly baked pies" loading="lazy" />
+      <div class="story-img-foot">
+        <p>CAUSEYSIDE STREET · PAISLEY · EST. SPRING 2023</p>
+      </div>
+    </div>
+    <div class="story-text">
+      <span class="label">Our Story</span>
+      <h2>BORN IN<br>PAISLEY.<br>RAISED ON PIES.</h2>
+      <p>Owner <strong>Scott McGinlay</strong> grew up with food in his blood — his father ran a butcher's shop right here in Paisley. After working his way through the deli trade from the age of 25, Scott opened Paisley Pie Co. on Bridge Street in spring 2023, before moving the business to its bigger <strong>flagship home on Causeyside Street.</strong></p>
+      <p>The concept was simple: <strong>if it tastes amazing, it can go in a pie.</strong> If Scott was cooking for himself and thought "that would be good in a pie," it went straight on the menu. Customers can even suggest their own flavour combinations in the request book — and if the pie makes the cut, <strong>it gets named after them.</strong></p>
+      <blockquote class="story-quote">
+        "Any time I'm cooking or making things for myself, I found myself thinking — that would be good in a pie."
+        <cite>— Scott McGinlay, Founder</cite>
+      </blockquote>
+      <p>Within months the shop outgrew Bridge Street entirely and the main store moved to <strong>Causeyside Street</strong>. A motion was tabled in the <strong>Scottish Parliament</strong> to congratulate the business. BBC News covered the story. Paisley Pie Co. now supplies <strong>Key Stores and Nisa</strong> nationally — with a Glasgow expansion planned.</p>
+    </div>
+  </div>
+</section>
+
+<!-- VIRAL -->
+<div class="viral">
+  <div>
+    <h3>THE BIG DADDY DONNER<br>BROKE THE INTERNET.</h3>
+    <p>Our signature donner meat pie racked up over 5 million views on social media. Still on the menu. Still the one everyone orders first.</p>
+  </div>
+  <div class="viral-nums">
+    <div class="vn"><strong>5M+</strong><span>Online Views</span></div>
+    <div class="vn"><strong>26K</strong><span>Followers</span></div>
+    <div class="vn"><strong>2023</strong><span>Founded</span></div>
+  </div>
+</div>
+
+<!-- MENU -->
+<section id="menu">
+  <div class="menu-header">
+    <span class="label">What We Bake</span>
+    <h2>OUR PIES & BAKES</h2>
+    <p>A taste of the counter. Pastry that's soft and buttery on top, crisp around the sides, firm on the bottom — every single time. See the full range on our menu page.</p>
+  </div>
+  <div class="menu-grid" id="home-menu-grid"></div>
+  <div style="text-align:center;margin-top:3rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+    <a href="menu.html" class="btn btn-red">View Full Menu</a>
+    <a href="order.html" class="btn btn-outline">Order Online →</a>
+  </div>
+</section>
+
+<!-- REQUEST BOOK -->
+<div class="request">
+  <h3>GOT A PIE IDEA? WRITE IT IN THE BOOK.</h3>
+  <p>We keep a customer request book in the shop. Suggest a flavour combination — if it makes the menu, the pie gets named after you.</p>
+  <a href="#hours" class="btn btn-red">Come Visit Us</a>
+</div>
+
+<!-- ST MIRREN -->
+<div class="stmirren">
+  <div class="stmirren-inner">
+    <div class="stmirren-badge">
+      <div class="sm-crest">⚽</div>
+      <p>ST MIRREN<br>FC</p>
+    </div>
+    <div class="stmirren-text">
+      <div class="sm-tag">⚫⚪ The Saints</div>
+      <h3>PROUD SPONSOR OF<br>ST MIRREN FC</h3>
+      <p>Scott McGinlay grew up in Paisley a lifelong Saints supporter. Through Scott McGinlay Catering, Paisley Pie Co. is proud to sponsor and cater for St Mirren Football Club — supporting the town's team just as the town has supported the shop.</p>
+      <div class="sm-colours">
+        <div class="sm-swatch" style="background:#000"></div>
+        <div class="sm-swatch" style="background:#fff"></div>
+        <span>Black & White — The Saints' Colours</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="reviews-top">
+    <div>
+      <span class="label">What People Say</span>
+      <h2>CUSTOMER<br>REVIEWS</h2>
+    </div>
+    <div class="reviews-score">
+      <span class="rs-big">4.2</span>
+      <div class="rs-detail">
+        <div class="stars">★★★★☆</div>
+        <p>177 Google reviews</p>
+        <p>#2 Bakery in Paisley</p>
+      </div>
+    </div>
+  </div>
+  <div class="reviews-grid">
+    <div class="rc">
+      <div class="rc-stars">★★★★★</div>
+      <p class="rc-text">"Absolutely love it — great selection of pies & cakes. Always something different to try."</p>
+      <div class="rc-name">Derek MacDougall</div>
+      <div class="rc-src">Google Review</div>
+    </div>
+    <div class="rc">
+      <div class="rc-stars">★★★★★</div>
+      <p class="rc-text">"The pastry is fantastic — soft and buttery on top, crisp around the sides and firm on the bottom. The steak and haggis was excellent. Huge succulent pieces of beef."</p>
+      <div class="rc-name">Verified Visitor</div>
+      <div class="rc-src">The Gazette</div>
+    </div>
+    <div class="rc">
+      <div class="rc-stars">★★★★★</div>
+      <p class="rc-text">"Amazing food and lovely staff — a welcoming atmosphere. Worth every penny for fresh, homemade pies. You can taste the care that goes into every one."</p>
+      <div class="rc-name">Verified Customer</div>
+      <div class="rc-src">TripAdvisor</div>
+    </div>
+    <div class="rc">
+      <div class="rc-stars">★★★★☆</div>
+      <p class="rc-text">"A Tardis of pies — so much variety in a small space. Hot and cold options, sausage rolls, muffins. Worth stopping in if you're passing through Paisley."</p>
+      <div class="rc-name">Foodie Explorers</div>
+      <div class="rc-src">foodieexplorers.co.uk</div>
+    </div>
+    <div class="rc">
+      <div class="rc-stars">★★★★★</div>
+      <p class="rc-text">"Staff are absolutely lovely — they take care of each customer as if it was their own family. Buzzing, busy place. The Big Daddy Donner is something special."</p>
+      <div class="rc-name">Verified Customer</div>
+      <div class="rc-src">TripAdvisor</div>
+    </div>
+    <div class="rc">
+      <div class="rc-stars">★★★☆☆</div>
+      <p class="rc-text">"Food good, service very bad both times. The pies genuinely are excellent — but be prepared to wait when it's busy."</p>
+      <div class="rc-name">Nick Baxter</div>
+      <div class="rc-src">Google Review</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOURS -->
+<section id="hours">
+  <div style="text-align:center;margin-bottom:3.5rem">
+    <span class="label">Visit Us</span>
+    <h2>OPENING HOURS<br>& LOCATION</h2>
+  </div>
+  <div class="hours-grid">
+    <div class="ht-card">
+      <div class="ht-head"><h3>CAUSEYSIDE STREET HOURS</h3></div>
+      <div class="ht-body">
+        <table class="ht"><tbody id="ht-rows"></tbody></table>
+      </div>
+    </div>
+    <div class="contact-list">
+      <div class="ci">
+        <div class="ci-icon">📍</div>
+        <div class="ci-body">
+          <strong>Address</strong>
+          <span id="ci-address">25 Causeyside St, Paisley PA1 1UL</span>
+        </div>
+      </div>
+      <div class="ci">
+        <div class="ci-icon">📞</div>
+        <div class="ci-body">
+          <strong>Phone</strong>
+          <a href="tel:01418898480" id="ci-phone">0141 889 8480</a>
+        </div>
+      </div>
+      <div class="ci">
+        <div class="ci-icon">📱</div>
+        <div class="ci-body">
+          <strong>Instagram</strong>
+          <a href="https://www.instagram.com/paisleypieco/" target="_blank" rel="noopener" id="ci-instagram">@paisleypieco</a>
+        </div>
+      </div>
+      <div class="ci">
+        <div class="ci-icon">💷</div>
+        <div class="ci-body">
+          <strong>Price Range</strong>
+          <span id="ci-price">£10–20 per person</span>
+        </div>
+      </div>
+      <a href="https://maps.google.com/?q=25+Causeyside+St,+Paisley+PA1+1UL" target="_blank" rel="noopener" class="btn btn-red" style="align-self:flex-start;margin-top:0.5rem" id="directions-link">
+        Get Directions →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- MAP -->
+<div class="map">
+  <iframe id="map-frame"
+    src="https://www.google.com/maps?q=25+Causeyside+St,+Paisley+PA1+1UL&output=embed"
+    allowfullscreen loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    title="Paisley Pie Co location map">
+  </iframe>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">PAISLEY PIE CO.</div>
+  <p id="footer-contact">25 Causeyside St, Paisley PA1 1UL &nbsp;·&nbsp; <a href="tel:01418898480">0141 889 8480</a> &nbsp;·&nbsp; <a href="https://www.instagram.com/paisleypieco/" target="_blank" rel="noopener">@paisleypieco</a></p>
+  <p style="width:100%;text-align:center;margin-top:0.5rem">Proud Sponsor of St Mirren FC · Photos: Paisley Pie Co / Wanderlog · Additional: Unsplash · <a href="admin.html">Manage</a></p>
+</footer>
+
+<script>
+  // Hamburger menu
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const menuClose  = document.getElementById('menu-close');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('open');
+    mobileMenu.classList.toggle('open');
+    document.body.style.overflow = mobileMenu.classList.contains('open') ? 'hidden' : '';
+  });
+
+  menuClose.addEventListener('click', closeMenu);
+
+  function closeMenu() {
+    hamburger.classList.remove('open');
+    mobileMenu.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+</script>
+
+<script src="data.js"></script>
+<script>
+  (function () {
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    var d = ppcData();
+    var info = d.info || {};
+
+    // ---- Menu preview (featured pies) ----
+    var grid = document.getElementById('home-menu-grid');
+    if (grid) {
+      var featured = (d.menu || []).filter(function(it){ return it.home; }).slice(0, 6);
+      grid.innerHTML = featured.map(function(it){
+        var tag = it.homeTag ? '<span class="pie-tag'+(it.homeTagDark ? ' dark' : '')+'">'+esc(it.homeTag)+'</span>' : '';
+        var img = it.img
+          ? '<img src="'+esc(it.img)+'" alt="'+esc(it.name)+'" loading="lazy" />'
+          : '<div style="width:100%;height:100%;background:#222;display:flex;align-items:center;justify-content:center;font-size:2.5rem">🥧</div>';
+        return '<div class="pie-card"><div class="pie-card-img">'+img+tag+'</div>'+
+               '<div class="pie-body"><h3>'+esc(it.name)+'</h3><p>'+esc(it.desc)+'</p>'+
+               '<div class="pie-price"><strong>From '+ppcMoney(it.price)+'</strong></div></div></div>';
+      }).join('');
+    }
+
+    // ---- Opening hours (auto-highlights today) ----
+    var rows = document.getElementById('ht-rows');
+    if (rows && info.hours) {
+      var todayName = new Date().toLocaleDateString('en-GB', { weekday: 'long' });
+      rows.innerHTML = info.hours.map(function(h){
+        var today = h.day === todayName;
+        return '<tr'+(today ? ' class="today"' : '')+'><td>'+esc(h.day)+(today ? ' ✦ Today' : '')+
+               '</td><td>'+esc(h.time)+'</td></tr>';
+      }).join('');
+    }
+
+    // ---- Contact details ----
+    function setText(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; }
+    function setAttr(id, attr, val){ var el = document.getElementById(id); if (el) el.setAttribute(attr, val); }
+    setText('ci-address', info.addressLine);
+    setText('ci-phone', info.phone);
+    setAttr('ci-phone', 'href', 'tel:' + (info.phoneHref || ''));
+    setText('ci-instagram', info.instagram);
+    setAttr('ci-instagram', 'href', info.instagramUrl || '#');
+    setText('ci-price', info.priceRange);
+
+    var q = encodeURIComponent(info.mapQuery || info.addressLine || '');
+    setAttr('directions-link', 'href', 'https://maps.google.com/?q=' + q);
+    setAttr('map-frame', 'src', 'https://www.google.com/maps?q=' + q + '&output=embed');
+
+    var fc = document.getElementById('footer-contact');
+    if (fc) {
+      fc.innerHTML = esc(info.addressLine) + ' &nbsp;·&nbsp; ' +
+        '<a href="tel:'+esc(info.phoneHref)+'">'+esc(info.phone)+'</a> &nbsp;·&nbsp; ' +
+        '<a href="'+esc(info.instagramUrl)+'" target="_blank" rel="noopener">'+esc(info.instagram)+'</a>';
+    }
+  })();
+</script>
+</body>
+</html>

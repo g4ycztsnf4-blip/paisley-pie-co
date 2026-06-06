@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Full Menu — Paisley Pie Co. · Causeyside Street</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --black:#000; --charcoal:#0d0d0d; --grey:#181818; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--black); line-height:1.6; }
+
+    /* NAV */
+    nav {
+      background:#000; border-bottom:3px solid #fff;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 5vw; height:62px; position:sticky; top:0; z-index:100;
+    }
+    .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:#fff; letter-spacing:0.06em; text-decoration:none; }
+    .nav-links { display:flex; gap:1.4rem; align-items:center; }
+    .nav-links a {
+      color:rgba(255,255,255,0.55); text-decoration:none;
+      font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; transition:color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color:#fff; }
+    .nav-cta { background:#fff; color:#000 !important; padding:0.45rem 1.1rem; border-radius:6px; }
+    .nav-cta:hover { background:#ddd; }
+
+    /* HERO */
+    .hero { background:#000; padding:5rem 5vw 4rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .hero-inner { max-width:760px; }
+    .hero-label {
+      font-size:0.7rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase;
+      color:rgba(255,255,255,0.4); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;
+    }
+    .hero-label::before { content:''; display:block; width:18px; height:2px; background:#fff; opacity:0.4; }
+    .hero h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,7vw,5.5rem); color:#fff; letter-spacing:0.03em; line-height:0.95; margin-bottom:1.25rem; }
+    .hero p { color:rgba(255,255,255,0.55); font-size:1rem; max-width:560px; line-height:1.75; }
+    .hero-actions { display:flex; gap:1rem; flex-wrap:wrap; margin-top:2rem; }
+    .btn {
+      display:inline-block; padding:0.85rem 2rem; border-radius:10px; font-size:0.8rem; font-weight:800;
+      letter-spacing:0.07em; text-transform:uppercase; text-decoration:none; transition:transform 0.15s,opacity 0.15s;
+    }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-red { background:#fff; color:#000; }
+    .btn-outline { background:transparent; color:var(--off); border:1.5px solid rgba(255,255,255,0.3); }
+
+    /* CATEGORY NAV (sticky pill bar) */
+    .cat-bar {
+      position:sticky; top:62px; z-index:90; background:var(--charcoal);
+      border-bottom:1px solid rgba(255,255,255,0.08);
+      display:flex; gap:0.5rem; overflow-x:auto; padding:0.85rem 5vw;
+    }
+    .cat-bar a {
+      flex-shrink:0; font-size:0.72rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+      color:rgba(255,255,255,0.5); text-decoration:none; border:1.5px solid rgba(255,255,255,0.15);
+      border-radius:999px; padding:0.4rem 1rem; transition:all 0.15s; white-space:nowrap;
+    }
+    .cat-bar a:hover { background:#fff; color:#000; border-color:#fff; }
+
+    /* MENU SECTIONS */
+    .menu-wrap { max-width:1000px; margin:0 auto; padding:4rem 5vw; }
+    .menu-cat { margin-bottom:4rem; scroll-margin-top:130px; }
+    .menu-cat-head { display:flex; align-items:baseline; gap:1rem; margin-bottom:1.75rem; border-bottom:2px solid #000; padding-bottom:0.75rem; }
+    .menu-cat-head h2 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,4vw,2.8rem); letter-spacing:0.03em; line-height:1; }
+    .menu-cat-head .cat-note { font-size:0.8rem; color:var(--muted); font-weight:600; }
+
+    .menu-list { display:grid; grid-template-columns:1fr 1fr; gap:0.4rem 3rem; }
+    .mi {
+      display:flex; align-items:flex-start; gap:0.75rem; padding:0.9rem 0;
+      border-bottom:1px solid rgba(0,0,0,0.07);
+    }
+    .mi-body { flex:1; }
+    .mi-name { font-weight:800; font-size:0.98rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+    .mi-name .badge {
+      font-size:0.56rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+      background:#000; color:#fff; padding:0.12rem 0.45rem; border-radius:4px;
+    }
+    .mi-name .badge.v { background:#1f7a3d; }
+    .mi-name .badge.hot { background:#a80f0f; }
+    .mi-desc { font-size:0.82rem; color:var(--muted); line-height:1.5; margin-top:0.15rem; }
+    .mi-dots { flex:1; border-bottom:1px dotted rgba(0,0,0,0.25); transform:translateY(-4px); min-width:12px; }
+    .mi-price { font-family:'Bebas Neue',sans-serif; font-size:1.25rem; letter-spacing:0.03em; white-space:nowrap; }
+
+    /* ALLERGEN / NOTE */
+    .menu-note {
+      max-width:1000px; margin:0 auto 4rem; padding:1.5rem 5vw;
+    }
+    .menu-note-box {
+      background:var(--stone); border-radius:14px; padding:1.5rem 1.75rem;
+      font-size:0.85rem; color:var(--muted); line-height:1.7;
+    }
+    .menu-note-box strong { color:#000; }
+
+    /* CTA STRIP */
+    .order-strip {
+      background:#000; padding:3.5rem 5vw; text-align:center;
+      border-top:3px solid #fff;
+    }
+    .order-strip h3 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,4vw,3rem); color:#fff; letter-spacing:0.04em; margin-bottom:0.6rem; }
+    .order-strip p { color:rgba(255,255,255,0.5); max-width:480px; margin:0 auto 2rem; font-size:0.95rem; }
+
+    footer { background:#050403; border-top:2px solid #fff; padding:1.5rem 5vw; text-align:center; }
+    footer a { color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.82rem; }
+    footer a:hover { color:#fff; }
+
+    @media (max-width:768px) {
+      .nav-links a:not(.nav-cta) { display:none; }
+      .menu-list { grid-template-columns:1fr; gap:0; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PAISLEY PIE CO.</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="menu.html" class="active">Full Menu</a>
+    <a href="deals.html">Deals</a>
+    <a href="news.html">News</a>
+    <a href="order.html" class="nav-cta">Order Online</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Causeyside Street · Paisley</div>
+    <h1>THE FULL<br>MENU</h1>
+    <p>Everything baked fresh daily at our Causeyside Street flagship. Pies, fusion specials, hot snacks, sweet bakes and drinks. Prices shown are for collection — ask in store about the daily specials board.</p>
+    <div class="hero-actions">
+      <a href="order.html" class="btn btn-red">Order for Collection</a>
+      <a href="deals.html" class="btn btn-outline">See This Week's Deals</a>
+    </div>
+  </div>
+</div>
+
+<div class="cat-bar" id="cat-bar"></div>
+
+<div class="menu-wrap" id="menu-wrap"></div>
+
+<div class="menu-note">
+  <div class="menu-note-box">
+    <strong>Allergens:</strong> Our pies are made fresh in a kitchen that handles gluten, dairy, egg, mustard, celery and sulphites. Full allergen information is available in store — please ask a member of staff before ordering if you have an allergy.<br><br>
+    <strong>Specials board:</strong> Scott runs limited-run specials most weeks — including pies named after customers who suggested them in the <a href="pie-ideas.html" style="color:#000;font-weight:700">request book</a>. Prices are for collection from Causeyside Street and may vary for delivery.
+  </div>
+</div>
+
+<div class="order-strip">
+  <h3>HUNGRY YET?</h3>
+  <p>Build your order online and skip the queue. Collect from Causeyside Street, usually ready in 15–20 minutes.</p>
+  <a href="order.html" class="btn btn-red">Start Your Order →</a>
+</div>
+
+<footer>
+  <a href="index.html">← Back to Paisley Pie Co.</a> <span style="opacity:0.4">·</span> <a href="admin.html">Manage</a>
+</footer>
+
+<script src="data.js"></script>
+<script>
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function render() {
+    var d = ppcData();
+    var cats = d.menuCategories || [];
+    var items = d.menu || [];
+
+    document.getElementById('cat-bar').innerHTML = cats.map(function(c){
+      return '<a href="#cat-'+esc(c.key)+'">'+esc(c.title)+'</a>';
+    }).join('');
+
+    document.getElementById('menu-wrap').innerHTML = cats.map(function(c){
+      var list = items.filter(function(it){ return it.cat === c.key; }).map(function(it){
+        var badge = it.badgeText ? ' <span class="badge '+esc(it.badge||'')+'">'+esc(it.badgeText)+'</span>' : '';
+        return '<div class="mi"><div class="mi-body"><div class="mi-name">'+esc(it.name)+badge+
+               '</div><div class="mi-desc">'+esc(it.desc)+'</div></div>'+
+               '<div class="mi-dots"></div><div class="mi-price">'+ppcMoney(it.price)+'</div></div>';
+      }).join('');
+      if (!list) return '';
+      return '<section class="menu-cat" id="cat-'+esc(c.key)+'">'+
+               '<div class="menu-cat-head"><h2>'+esc(c.title)+'</h2>'+
+               (c.note ? '<span class="cat-note">'+esc(c.note)+'</span>' : '')+'</div>'+
+               '<div class="menu-list">'+list+'</div></section>';
+    }).join('');
+  }
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pie Ideas Forum — Paisley Pie Co.</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --black: #000; --off: #f8f6f2; --stone: #efefeb; --muted: #6a6560; }
+
+    body { font-family: 'Inter', sans-serif; background: var(--off); color: var(--black); line-height: 1.6; }
+
+    /* NAV */
+    nav {
+      background: #000; border-bottom: 3px solid #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 62px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+      color: #fff; letter-spacing: 0.06em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+
+    /* HERO */
+    .hero {
+      background: #000; padding: 5rem 5vw 4rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .hero-inner { max-width: 720px; }
+    .hero-label {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.15em;
+      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .hero-label::before { content:''; display:block; width:18px; height:2px; background:#fff; opacity:0.4; }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      color: #fff; letter-spacing: 0.03em; line-height: 0.95; margin-bottom: 1.25rem;
+    }
+    .hero p { color: rgba(255,255,255,0.55); font-size: 1rem; max-width: 520px; line-height: 1.75; }
+
+    .counter-strip {
+      display: flex; gap: 3rem; margin-top: 2.5rem;
+      padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .counter strong {
+      display: block; font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; color: #fff; line-height: 1;
+    }
+    .counter span { font-size: 0.7rem; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* SUBMIT FORM */
+    .submit-section { padding: 4rem 5vw; background: var(--stone); border-bottom: 1px solid rgba(0,0,0,0.08); }
+    .submit-section h2 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+      letter-spacing: 0.04em; margin-bottom: 0.5rem;
+    }
+    .submit-section > p { color: var(--muted); margin-bottom: 2rem; font-size: 0.93rem; }
+
+    form.idea-form { max-width: 680px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #000; }
+    .form-group input, .form-group textarea {
+      border: 1.5px solid rgba(0,0,0,0.2); border-radius: 8px;
+      padding: 0.75rem 1rem; font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; background: #fff; color: #000;
+      transition: border-color 0.2s; width: 100%;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none; border-color: #000;
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-full { grid-column: 1 / -1; }
+
+    .btn-submit {
+      background: #000; color: #fff;
+      border: none; border-radius: 8px;
+      padding: 0.9rem 2.5rem; font-size: 0.82rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s; margin-top: 0.5rem;
+    }
+    .btn-submit:hover { opacity: 0.8; transform: translateY(-1px); }
+
+    .success-msg {
+      display: none; background: #000; color: #fff;
+      border-radius: 8px; padding: 1rem 1.5rem; margin-top: 1rem;
+      font-weight: 600; font-size: 0.9rem;
+    }
+
+    /* IDEAS GRID */
+    .ideas-section { padding: 4rem 5vw; }
+    .ideas-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .ideas-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.04em; }
+
+    .sort-btns { display: flex; gap: 0.5rem; }
+    .sort-btn {
+      background: transparent; border: 1.5px solid rgba(0,0,0,0.2);
+      border-radius: 6px; padding: 0.35rem 0.85rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+    }
+    .sort-btn.active, .sort-btn:hover { background: #000; color: #fff; border-color: #000; }
+
+    .ideas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+
+    .idea-card {
+      background: #fff; border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 14px; padding: 1.5rem; position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .idea-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+
+    .idea-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.75rem; }
+    .idea-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.03em; line-height: 1; }
+    .vote-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 0.15rem;
+      background: var(--stone); border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 8px; padding: 0.4rem 0.7rem; cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0; min-width: 52px;
+    }
+    .vote-btn:hover, .vote-btn.voted { background: #000; color: #fff; border-color: #000; }
+    .vote-btn .arrow { font-size: 0.85rem; line-height: 1; }
+    .vote-btn .count { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; line-height: 1; }
+
+    .idea-desc { font-size: 0.87rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+
+    .idea-meta { display: flex; align-items: center; justify-content: space-between; }
+    .idea-author { font-size: 0.75rem; font-weight: 600; color: rgba(0,0,0,0.4); }
+    .idea-tag {
+      background: var(--stone); border-radius: 5px;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 0.2rem 0.5rem; color: #000;
+    }
+
+    .empty-state {
+      grid-column: 1/-1; text-align: center;
+      padding: 4rem 2rem; color: var(--muted);
+    }
+    .empty-state h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin-bottom: 0.5rem; color: #000; }
+
+    /* FOOTER */
+    footer { background: #000; border-top: 2px solid #fff; padding: 1.5rem 5vw; text-align: center; }
+    footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.82rem; }
+    footer a:hover { color: #fff; }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PAISLEY PIE CO.</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="menu.html">Full Menu</a>
+    <a href="deals.html">Deals</a>
+    <a href="news.html">News</a>
+    <a href="pie-ideas.html" class="active">Pie Ideas</a>
+    <a href="suggestions.html">Suggest a Change</a>
+    <a href="order.html">Order</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Community</div>
+    <h1>THE PIE<br>IDEAS FORUM</h1>
+    <p>Got a wild idea for a new pie? Drop it here. Scott reads every single one — and if your idea makes the menu, the pie gets <strong style="color:#fff">named after you.</strong></p>
+    <div class="counter-strip">
+      <div class="counter"><strong id="idea-count">0</strong><span>Ideas Submitted</span></div>
+      <div class="counter"><strong id="vote-count">0</strong><span>Total Votes</span></div>
+      <div class="counter"><strong>∞</strong><span>Pies Possible</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-section">
+  <h2>SUBMIT YOUR PIE IDEA</h2>
+  <p>Tell us what's in it, why it works, and why Scott needs to make it happen.</p>
+  <form class="idea-form" id="idea-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Your Name</label>
+        <input type="text" id="author" placeholder="e.g. Barry from Paisley" required />
+      </div>
+      <div class="form-group">
+        <label>Pie Name</label>
+        <input type="text" id="pie-name" placeholder="e.g. The Paisley Paneer" required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group form-full">
+        <label>What's In It?</label>
+        <input type="text" id="ingredients" placeholder="e.g. Slow-cooked lamb, mint yogurt, roasted peppers..." required />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group form-full">
+        <label>Why Would It Work?</label>
+        <textarea id="reason" placeholder="Tell Scott why this needs to be a pie. The more convincing the better..." required></textarea>
+      </div>
+    </div>
+    <button type="submit" class="btn-submit">Submit My Idea →</button>
+    <div class="success-msg" id="success-msg">🥧 Idea submitted! Scott will see this. Keep an eye on the menu…</div>
+  </form>
+</div>
+
+<div class="ideas-section">
+  <div class="ideas-header">
+    <h2>ALL IDEAS</h2>
+    <div class="sort-btns">
+      <button class="sort-btn active" data-sort="votes">Top Voted</button>
+      <button class="sort-btn" data-sort="newest">Newest</button>
+    </div>
+  </div>
+  <div class="ideas-grid" id="ideas-grid">
+    <div class="empty-state">
+      <h3>No ideas yet.</h3>
+      <p>Be the first to submit one above.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html">← Back to Paisley Pie Co.</a> <span style="opacity:0.4">·</span> <a href="admin.html">Manage</a>
+</footer>
+
+<script>
+  const STORAGE_KEY = 'ppc_pie_ideas';
+  let sortBy = 'votes';
+
+  // Seed ideas
+  const seeds = [
+    { id: 1, author: 'Barry M.', name: 'The Full Scottish', ingredients: 'Lorne sausage, haggis, black pudding, baked beans', reason: 'Everything you need in a full Scottish breakfast — but in a pie. Pure genius.', votes: 47, voted: false, ts: Date.now() - 86400000 * 5 },
+    { id: 2, author: 'Gemma T.', name: 'The Disco Chicken', ingredients: 'Disco sauce, chicken tikka, onions, peppers', reason: 'Disco sauce is Scotland\'s greatest condiment. It belongs in a pie. Fight me.', votes: 38, voted: false, ts: Date.now() - 86400000 * 3 },
+    { id: 3, author: 'Craig F.', name: 'The Sannies Striker', ingredients: 'Smoked beef, caramelised onion, Irn Bru bbq sauce', reason: 'Named for the Saints. A match day essential. Irn Bru BBQ sauce is the secret weapon.', votes: 31, voted: false, ts: Date.now() - 86400000 * 2 },
+    { id: 4, author: 'Fiona L.', name: 'Butter Chicken Bake', ingredients: 'Butter chicken sauce, basmati rice filling, naan pastry top', reason: 'A proper butter chicken curry sealed under a naan-style pastry lid. Revolutionary.', votes: 24, voted: false, ts: Date.now() - 86400000 },
+    { id: 5, author: 'Robbie S.', name: 'The Vegan Vindaloo', ingredients: 'Jackfruit, vindaloo sauce, potato, chickpeas', reason: 'Vegans deserve a spicy pie too. This would go viral, trust me.', votes: 19, voted: false, ts: Date.now() - 3600000 * 5 },
+  ];
+
+  function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds)); return seeds; }
+    return JSON.parse(raw);
+  }
+
+  function save(ideas) { localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas)); }
+
+  function updateCounters(ideas) {
+    document.getElementById('idea-count').textContent = ideas.length;
+    document.getElementById('vote-count').textContent = ideas.reduce((s, i) => s + i.votes, 0);
+  }
+
+  function render() {
+    const ideas = load();
+    updateCounters(ideas);
+    const sorted = [...ideas].sort((a, b) => sortBy === 'votes' ? b.votes - a.votes : b.ts - a.ts);
+    const grid = document.getElementById('ideas-grid');
+    if (!sorted.length) {
+      grid.innerHTML = '<div class="empty-state"><h3>No ideas yet.</h3><p>Be the first to submit one above.</p></div>';
+      return;
+    }
+    grid.innerHTML = sorted.map(idea => `
+      <div class="idea-card" data-id="${idea.id}">
+        <div class="idea-card-top">
+          <div class="idea-name">${idea.name}</div>
+          <button class="vote-btn ${idea.voted ? 'voted' : ''}" onclick="vote(${idea.id})">
+            <span class="arrow">▲</span>
+            <span class="count">${idea.votes}</span>
+          </button>
+        </div>
+        <div class="idea-desc"><strong style="color:#000">Ingredients:</strong> ${idea.ingredients}<br><br>${idea.reason}</div>
+        <div class="idea-meta">
+          <span class="idea-author">By ${idea.author}</span>
+          <span class="idea-tag">Pie Idea</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function vote(id) {
+    const ideas = load();
+    const idea = ideas.find(i => i.id === id);
+    if (!idea) return;
+    idea.voted = !idea.voted;
+    idea.votes += idea.voted ? 1 : -1;
+    save(ideas);
+    render();
+  }
+
+  document.getElementById('idea-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const ideas = load();
+    const newIdea = {
+      id: Date.now(),
+      author: document.getElementById('author').value.trim(),
+      name: document.getElementById('pie-name').value.trim(),
+      ingredients: document.getElementById('ingredients').value.trim(),
+      reason: document.getElementById('reason').value.trim(),
+      votes: 0,
+      voted: false,
+      ts: Date.now()
+    };
+    ideas.unshift(newIdea);
+    save(ideas);
+    this.reset();
+    const msg = document.getElementById('success-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    render();
+    document.querySelector('.ideas-section').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      sortBy = this.dataset.sort;
+      render();
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>

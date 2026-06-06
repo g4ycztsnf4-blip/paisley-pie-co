@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Online — Paisley Pie Co. · Causeyside Street</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --black:#000; --charcoal:#0d0d0d; --grey:#181818; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; }
+    html { scroll-behavior:smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--black); line-height:1.6; }
+
+    /* NAV */
+    nav { background:#000; border-bottom:3px solid #fff; display:flex; align-items:center; justify-content:space-between; padding:0 5vw; height:62px; position:sticky; top:0; z-index:100; }
+    .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:#fff; letter-spacing:0.06em; text-decoration:none; }
+    .nav-links { display:flex; gap:1.4rem; align-items:center; }
+    .nav-links a { color:rgba(255,255,255,0.55); text-decoration:none; font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; transition:color 0.2s; }
+    .nav-links a:hover, .nav-links a.active { color:#fff; }
+    .cart-pill {
+      position:relative; background:#fff; color:#000 !important; padding:0.45rem 1.1rem 0.45rem 0.9rem;
+      border-radius:6px; display:flex; align-items:center; gap:0.4rem; cursor:pointer; border:none;
+      font-family:'Inter',sans-serif; font-size:0.8rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase;
+    }
+    .cart-pill .count {
+      background:#000; color:#fff; font-size:0.7rem; border-radius:999px;
+      min-width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; padding:0 5px;
+    }
+
+    /* HERO */
+    .hero { background:#000; padding:4rem 5vw 3rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .hero-inner { max-width:760px; }
+    .hero-label { font-size:0.7rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem; }
+    .hero-label::before { content:''; display:block; width:18px; height:2px; background:#fff; opacity:0.4; }
+    .hero h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(3rem,7vw,5rem); color:#fff; letter-spacing:0.03em; line-height:0.95; margin-bottom:1rem; }
+    .hero p { color:rgba(255,255,255,0.55); font-size:0.98rem; max-width:560px; }
+
+    /* FULFILMENT TOGGLE */
+    .fulfil { display:flex; gap:0.75rem; margin-top:1.75rem; }
+    .fulfil button {
+      flex:1; max-width:200px; background:transparent; border:1.5px solid rgba(255,255,255,0.25);
+      color:rgba(255,255,255,0.7); border-radius:10px; padding:0.85rem 1rem; cursor:pointer;
+      font-family:'Inter',sans-serif; font-weight:800; font-size:0.8rem; letter-spacing:0.05em; text-transform:uppercase; transition:all 0.15s;
+    }
+    .fulfil button.active { background:#fff; color:#000; border-color:#fff; }
+    .fulfil button small { display:block; font-weight:600; font-size:0.66rem; opacity:0.7; text-transform:none; letter-spacing:0; margin-top:0.2rem; }
+
+    /* LAYOUT */
+    .order-layout { max-width:1180px; margin:0 auto; padding:3rem 5vw 5rem; display:grid; grid-template-columns:1fr 360px; gap:2.5rem; align-items:start; }
+
+    /* CATEGORY BAR */
+    .cat-bar { display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:1rem; margin-bottom:0.5rem; position:sticky; top:62px; background:var(--off); z-index:40; padding-top:0.5rem; }
+    .cat-bar a { flex-shrink:0; font-size:0.72rem; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); text-decoration:none; border:1.5px solid rgba(0,0,0,0.15); border-radius:999px; padding:0.4rem 1rem; transition:all 0.15s; white-space:nowrap; }
+    .cat-bar a:hover { background:#000; color:#fff; border-color:#000; }
+
+    .menu-cat { margin-bottom:2.5rem; scroll-margin-top:120px; }
+    .menu-cat h2 { font-family:'Bebas Neue',sans-serif; font-size:1.9rem; letter-spacing:0.03em; margin-bottom:1rem; border-bottom:2px solid #000; padding-bottom:0.5rem; }
+
+    .item-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.85rem; }
+    .item {
+      background:#fff; border:1.5px solid rgba(0,0,0,0.1); border-radius:14px; padding:1.1rem 1.2rem;
+      display:flex; flex-direction:column; gap:0.4rem; transition:box-shadow 0.2s,transform 0.2s;
+    }
+    .item:hover { box-shadow:0 10px 26px rgba(0,0,0,0.08); transform:translateY(-2px); }
+    .item-name { font-weight:800; font-size:0.98rem; display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap; }
+    .item-name .badge { font-size:0.56rem; font-weight:800; letter-spacing:0.07em; text-transform:uppercase; background:#000; color:#fff; padding:0.1rem 0.4rem; border-radius:4px; }
+    .item-name .badge.v { background:var(--green); }
+    .item-name .badge.hot { background:#a80f0f; }
+    .item-desc { font-size:0.8rem; color:var(--muted); line-height:1.45; flex:1; }
+    .item-foot { display:flex; align-items:center; justify-content:space-between; margin-top:0.4rem; }
+    .item-price { font-family:'Bebas Neue',sans-serif; font-size:1.35rem; letter-spacing:0.03em; }
+    .add-btn {
+      background:#000; color:#fff; border:none; border-radius:8px; padding:0.5rem 1rem;
+      font-family:'Inter',sans-serif; font-weight:800; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase;
+      cursor:pointer; transition:opacity 0.15s,transform 0.12s;
+    }
+    .add-btn:hover { opacity:0.82; }
+    .add-btn:active { transform:scale(0.94); }
+    .add-btn.added { background:var(--green); }
+
+    /* CART (sidebar on desktop) */
+    .cart {
+      position:sticky; top:80px; background:#fff; border:1.5px solid rgba(0,0,0,0.12);
+      border-radius:18px; overflow:hidden; box-shadow:0 14px 40px rgba(0,0,0,0.07);
+    }
+    .cart-head { background:#000; color:#fff; padding:1.1rem 1.4rem; }
+    .cart-head h3 { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.04em; }
+    .cart-head .mode { font-size:0.72rem; color:rgba(255,255,255,0.55); font-weight:600; }
+    .cart-items { max-height:48vh; overflow-y:auto; padding:0.5rem 1.4rem; }
+    .cart-empty { text-align:center; color:var(--muted); padding:2.5rem 1rem; font-size:0.88rem; }
+    .cart-empty .big { font-size:2rem; display:block; margin-bottom:0.5rem; }
+
+    .ci { display:flex; align-items:center; gap:0.75rem; padding:0.85rem 0; border-bottom:1px solid rgba(0,0,0,0.07); }
+    .ci-info { flex:1; min-width:0; }
+    .ci-name { font-weight:700; font-size:0.86rem; }
+    .ci-each { font-size:0.74rem; color:var(--muted); }
+    .qty { display:flex; align-items:center; gap:0.5rem; }
+    .qty button { width:24px; height:24px; border-radius:6px; border:1.5px solid rgba(0,0,0,0.2); background:#fff; cursor:pointer; font-weight:800; line-height:1; font-size:0.9rem; }
+    .qty button:hover { background:#000; color:#fff; border-color:#000; }
+    .qty span { min-width:18px; text-align:center; font-weight:700; font-size:0.86rem; }
+    .ci-line { font-weight:800; font-size:0.86rem; min-width:48px; text-align:right; }
+
+    .cart-foot { padding:1.2rem 1.4rem; border-top:1.5px solid rgba(0,0,0,0.1); background:var(--stone); }
+    .totals-row { display:flex; justify-content:space-between; font-size:0.86rem; color:var(--muted); margin-bottom:0.4rem; }
+    .totals-row.grand { color:#000; font-weight:800; font-size:1.05rem; margin-top:0.6rem; padding-top:0.6rem; border-top:1px solid rgba(0,0,0,0.15); }
+    .checkout-btn {
+      width:100%; background:#000; color:#fff; border:none; border-radius:10px; padding:1rem;
+      font-family:'Inter',sans-serif; font-weight:800; font-size:0.85rem; letter-spacing:0.06em; text-transform:uppercase;
+      cursor:pointer; margin-top:1rem; transition:opacity 0.15s,transform 0.12s;
+    }
+    .checkout-btn:hover { opacity:0.85; }
+    .checkout-btn:disabled { opacity:0.35; cursor:not-allowed; }
+    .min-note { font-size:0.72rem; color:var(--muted); text-align:center; margin-top:0.6rem; }
+
+    /* MODAL */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:center; justify-content:center; padding:5vw; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:18px; max-width:440px; width:100%; padding:2rem; text-align:center; }
+    .modal .tick { width:64px; height:64px; border-radius:50%; background:var(--green); color:#fff; font-size:2rem; display:flex; align-items:center; justify-content:center; margin:0 auto 1.25rem; }
+    .modal h3 { font-family:'Bebas Neue',sans-serif; font-size:2rem; letter-spacing:0.03em; margin-bottom:0.5rem; }
+    .modal p { color:var(--muted); font-size:0.92rem; margin-bottom:0.5rem; }
+    .modal .ref { font-weight:800; color:#000; font-size:1.1rem; letter-spacing:0.05em; }
+    .modal .btn-row { display:flex; gap:0.75rem; margin-top:1.5rem; }
+    .modal button { flex:1; border:none; border-radius:10px; padding:0.85rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; }
+    .modal .b-dark { background:#000; color:#fff; }
+    .modal .b-light { background:var(--stone); color:#000; }
+    /* details form modal */
+    .modal.form { text-align:left; max-width:460px; }
+    .modal.form h3 { margin-bottom:0.25rem; }
+    .modal.form .sub { color:var(--muted); font-size:0.85rem; margin-bottom:1.25rem; }
+    .modal.form .fld { display:flex; flex-direction:column; gap:0.3rem; margin-bottom:0.85rem; }
+    .modal.form .fld label { font-size:0.66rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+    .modal.form .fld input, .modal.form .fld textarea { border:1.5px solid rgba(0,0,0,0.18); border-radius:9px; padding:0.7rem 0.85rem; font-family:'Inter',sans-serif; font-size:0.9rem; width:100%; }
+    .modal.form .fld input:focus, .modal.form .fld textarea:focus { outline:none; border-color:#000; }
+    .modal.form .fld textarea { resize:vertical; min-height:54px; }
+    .modal.form .err { color:#a80f0f; font-size:0.78rem; min-height:1em; margin-bottom:0.3rem; }
+
+    /* MOBILE CART BAR */
+    .mobile-cart-bar { display:none; }
+
+    footer { background:#050403; border-top:2px solid #fff; padding:1.5rem 5vw; text-align:center; }
+    footer a { color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.82rem; }
+    footer a:hover { color:#fff; }
+
+    @media (max-width:900px) {
+      .order-layout { grid-template-columns:1fr; }
+      .item-grid { grid-template-columns:1fr; }
+      .nav-links a:not(.cart-pill) { display:none; }
+      /* Cart becomes a slide-up sheet */
+      .cart-col { position:fixed; inset:0; top:auto; z-index:250; transform:translateY(100%); transition:transform 0.3s; max-height:88vh; }
+      .cart-col.open { transform:translateY(0); }
+      .cart { position:static; border-radius:18px 18px 0 0; max-height:88vh; display:flex; flex-direction:column; }
+      .cart-items { max-height:none; flex:1; }
+      .cart-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:240; }
+      .cart-backdrop.open { display:block; }
+      .mobile-cart-bar {
+        display:flex; position:fixed; bottom:0; left:0; right:0; z-index:230;
+        background:#000; color:#fff; padding:1rem 5vw; align-items:center; justify-content:space-between;
+        cursor:pointer; border-top:2px solid #fff;
+      }
+      .mobile-cart-bar.hidden { display:none; }
+      .mobile-cart-bar strong { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.04em; }
+      .mobile-cart-bar .mcb-total { font-weight:800; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PAISLEY PIE CO.</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="menu.html">Full Menu</a>
+    <a href="deals.html">Deals</a>
+    <a href="news.html">News</a>
+    <button class="cart-pill" id="cart-pill-btn">🛒 Cart <span class="count" id="nav-count">0</span></button>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Causeyside Street · Paisley</div>
+    <h1>ORDER ONLINE</h1>
+    <p>Build your order, skip the queue, and collect hot from our Causeyside Street flagship. No payment is taken online — you pay on collection or delivery.</p>
+    <div class="fulfil">
+      <button class="active" data-mode="collection">Collection<small>Ready in ~15–20 min</small></button>
+      <button data-mode="delivery">Delivery<small>£2.50 · within 3 miles</small></button>
+    </div>
+  </div>
+</div>
+
+<!-- BUSY SCREEN (shown when ordering is switched off in the manager) -->
+<div id="busy-screen" style="display:none; max-width:640px; margin:0 auto; padding:4rem 5vw 6rem; text-align:center">
+  <div style="font-size:3rem">⏳</div>
+  <h2 id="busy-title" style="font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,6vw,3.2rem); letter-spacing:0.03em; margin:0.5rem 0 1rem"></h2>
+  <p id="busy-msg" style="color:var(--muted); font-size:1rem; line-height:1.7; margin-bottom:2rem"></p>
+  <form id="waitlist-form" style="display:flex; gap:0.6rem; max-width:420px; margin:0 auto; flex-wrap:wrap">
+    <input type="email" id="waitlist-email" placeholder="you@email.com" required style="flex:1; min-width:180px; border:1.5px solid rgba(0,0,0,0.2); border-radius:10px; padding:0.85rem 1rem; font-family:'Inter',sans-serif; font-size:0.95rem" />
+    <button type="submit" style="background:#000; color:#fff; border:none; border-radius:10px; padding:0.85rem 1.5rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.8rem; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer">Notify me</button>
+  </form>
+  <div id="waitlist-ok" style="display:none; margin-top:1rem; color:var(--green); font-weight:700">🥧 You're on the list — we'll email you the moment we reopen.</div>
+  <p style="margin-top:2rem; font-size:0.9rem"><a href="menu.html" style="color:#000;font-weight:700">Browse the menu</a> &nbsp;·&nbsp; <a href="index.html" style="color:#000;font-weight:700">Back home</a></p>
+</div>
+
+<div class="order-layout">
+
+  <!-- MENU COLUMN -->
+  <div class="menu-col">
+    <div class="cat-bar">
+      <a href="#c-signature">Signature</a>
+      <a href="#c-fusion">Fusion</a>
+      <a href="#c-classic">Classic</a>
+      <a href="#c-snacks">Snacks</a>
+      <a href="#c-sweet">Sweet</a>
+      <a href="#c-drinks">Drinks</a>
+    </div>
+    <div id="menu-render"></div>
+  </div>
+
+  <!-- CART COLUMN -->
+  <div class="cart-col" id="cart-col">
+    <div class="cart">
+      <div class="cart-head">
+        <h3>Your Order</h3>
+        <span class="mode" id="cart-mode">Collection · Causeyside Street</span>
+      </div>
+      <div class="cart-items" id="cart-items">
+        <div class="cart-empty"><span class="big">🥧</span>Your basket is empty.<br>Add a pie to get started.</div>
+      </div>
+      <div class="cart-foot">
+        <div class="totals-row"><span>Subtotal</span><span id="t-sub">£0.00</span></div>
+        <div class="totals-row" id="fee-row" style="display:none"><span>Delivery fee</span><span id="t-fee">£2.50</span></div>
+        <div class="totals-row grand"><span>Total</span><span id="t-grand">£0.00</span></div>
+        <button class="checkout-btn" id="checkout-btn" disabled>Checkout</button>
+        <p class="min-note" id="min-note">Add items to checkout</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- mobile -->
+<div class="cart-backdrop" id="cart-backdrop"></div>
+<div class="mobile-cart-bar hidden" id="mobile-cart-bar">
+  <span><strong id="mcb-count">0</strong> &nbsp;items</span>
+  <span>View basket</span>
+  <span class="mcb-total" id="mcb-total">£0.00</span>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="modal-overlay" id="details-modal">
+  <div class="modal form">
+    <h3>ALMOST THERE</h3>
+    <p class="sub" id="details-sub">Add your details so we can get your order ready.</p>
+    <div class="fld">
+      <label>Your name *</label>
+      <input type="text" id="cust-name" placeholder="e.g. Chloe M." />
+    </div>
+    <div class="fld">
+      <label>Phone number *</label>
+      <input type="tel" id="cust-phone" placeholder="e.g. 07123 456789" />
+    </div>
+    <div class="fld" id="addr-fld" style="display:none">
+      <label>Delivery address *</label>
+      <input type="text" id="cust-addr" placeholder="House number, street, postcode" />
+    </div>
+    <div class="fld">
+      <label>Notes (optional)</label>
+      <textarea id="cust-notes" placeholder="Any allergies or requests…"></textarea>
+    </div>
+    <div class="err" id="details-err"></div>
+    <div class="btn-row">
+      <button class="b-light" id="details-cancel">Back</button>
+      <button class="b-dark" id="details-place">Place Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="tick">✓</div>
+    <h3>ORDER PLACED!</h3>
+    <p>Thanks! Your order has been logged. No payment is taken online — you'll pay on collection/delivery.</p>
+    <p>Your reference</p>
+    <div class="ref" id="order-ref">PPC-0000</div>
+    <p style="margin-top:0.75rem" id="modal-mode-line">Collect from 25 Causeyside St in ~15–20 min.</p>
+    <div class="btn-row">
+      <button class="b-light" id="modal-close">Keep Browsing</button>
+      <button class="b-dark" id="modal-home" onclick="location.href='index.html'">Back Home</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html">← Back to Paisley Pie Co.</a> <span style="opacity:0.4">·</span> <a href="admin.html">Manage</a>
+</footer>
+
+<script src="data.js"></script>
+<script src="orders.js"></script>
+<script>
+  // Build the ordering menu from the shared content file (data.js)
+  const _d = ppcData();
+  const MENU = {};
+  (_d.menuCategories || []).forEach(c => { MENU[c.key] = { title: c.title, items: [] }; });
+  (_d.menu || []).forEach(it => { if (MENU[it.cat]) MENU[it.cat].items.push(it); });
+  const DELIVERY_FEE = (_d.info && _d.info.deliveryFee) || 2.50;
+  const CART_KEY = 'ppc_order_cart';
+  let mode = 'collection';
+  let cart = JSON.parse(localStorage.getItem(CART_KEY) || '{}');
+
+  const allItems = {};
+  Object.values(MENU).forEach(cat => cat.items.forEach(it => allItems[it.id] = it));
+
+  const money = n => '£' + n.toFixed(2);
+
+  function renderMenu() {
+    const wrap = document.getElementById('menu-render');
+    wrap.innerHTML = Object.entries(MENU).map(([key, cat]) => `
+      <section class="menu-cat" id="c-${key}">
+        <h2>${cat.title}</h2>
+        <div class="item-grid">
+          ${cat.items.map(it => `
+            <div class="item">
+              <div class="item-name">${it.name}${it.badgeText ? `<span class="badge ${it.badge||''}">${it.badgeText}</span>` : ''}</div>
+              <div class="item-desc">${it.desc}</div>
+              <div class="item-foot">
+                <span class="item-price">${money(it.price)}</span>
+                <button class="add-btn" data-add="${it.id}">Add +</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `).join('');
+
+    wrap.querySelectorAll('[data-add]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        addToCart(btn.dataset.add);
+        btn.textContent = 'Added ✓';
+        btn.classList.add('added');
+        setTimeout(() => { btn.textContent = 'Add +'; btn.classList.remove('added'); }, 900);
+      });
+    });
+  }
+
+  function addToCart(id) { cart[id] = (cart[id] || 0) + 1; persist(); }
+  function changeQty(id, delta) {
+    cart[id] = (cart[id] || 0) + delta;
+    if (cart[id] <= 0) delete cart[id];
+    persist();
+  }
+  function persist() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); renderCart(); }
+
+  function totals() {
+    let sub = 0, count = 0;
+    Object.entries(cart).forEach(([id, q]) => { if (allItems[id]) { sub += allItems[id].price * q; count += q; } });
+    const fee = (mode === 'delivery' && count > 0) ? DELIVERY_FEE : 0;
+    return { sub, fee, grand: sub + fee, count };
+  }
+
+  function renderCart() {
+    const { sub, fee, grand, count } = totals();
+    const box = document.getElementById('cart-items');
+    const entries = Object.entries(cart).filter(([id]) => allItems[id]);
+
+    if (!entries.length) {
+      box.innerHTML = '<div class="cart-empty"><span class="big">🥧</span>Your basket is empty.<br>Add a pie to get started.</div>';
+    } else {
+      box.innerHTML = entries.map(([id, q]) => {
+        const it = allItems[id];
+        return `<div class="ci">
+          <div class="ci-info">
+            <div class="ci-name">${it.name}</div>
+            <div class="ci-each">${money(it.price)} each</div>
+          </div>
+          <div class="qty">
+            <button data-q="-" data-id="${id}" aria-label="Decrease">−</button>
+            <span>${q}</span>
+            <button data-q="+" data-id="${id}" aria-label="Increase">+</button>
+          </div>
+          <div class="ci-line">${money(it.price * q)}</div>
+        </div>`;
+      }).join('');
+      box.querySelectorAll('[data-q]').forEach(b => {
+        b.addEventListener('click', () => changeQty(b.dataset.id, b.dataset.q === '+' ? 1 : -1));
+      });
+    }
+
+    document.getElementById('t-sub').textContent = money(sub);
+    document.getElementById('t-fee').textContent = money(fee);
+    document.getElementById('fee-row').style.display = (mode === 'delivery') ? 'flex' : 'none';
+    document.getElementById('t-grand').textContent = money(grand);
+    document.getElementById('nav-count').textContent = count;
+    document.getElementById('mcb-count').textContent = count;
+    document.getElementById('mcb-total').textContent = money(grand);
+
+    const btn = document.getElementById('checkout-btn');
+    const note = document.getElementById('min-note');
+    btn.disabled = count === 0;
+    if (count === 0) { note.textContent = 'Add items to checkout'; }
+    else { btn.textContent = 'Checkout · ' + money(grand); note.textContent = mode === 'delivery' ? 'Delivery within 3 miles of Causeyside St' : 'Collect from 25 Causeyside St'; }
+
+    const bar = document.getElementById('mobile-cart-bar');
+    bar.classList.toggle('hidden', count === 0);
+  }
+
+  // Fulfilment toggle
+  document.querySelectorAll('.fulfil button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.fulfil button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      mode = b.dataset.mode;
+      document.getElementById('cart-mode').textContent = (mode === 'delivery' ? 'Delivery' : 'Collection') + ' · Causeyside Street';
+      renderCart();
+    });
+  });
+
+  // Checkout → details modal → place order
+  var detailsModal = document.getElementById('details-modal');
+  document.getElementById('checkout-btn').addEventListener('click', () => {
+    if (totals().count === 0) return;
+    document.getElementById('addr-fld').style.display = (mode === 'delivery') ? 'flex' : 'none';
+    document.getElementById('details-sub').textContent = mode === 'delivery'
+      ? 'Add your details for delivery within 3 miles of Causeyside Street.'
+      : 'Add your details so we can have your order ready for collection.';
+    document.getElementById('details-err').textContent = '';
+    detailsModal.classList.add('open');
+    closeMobileCart();
+  });
+  document.getElementById('details-cancel').addEventListener('click', () => detailsModal.classList.remove('open'));
+  detailsModal.addEventListener('click', e => { if (e.target.id === 'details-modal') e.target.classList.remove('open'); });
+
+  document.getElementById('details-place').addEventListener('click', () => {
+    var name = document.getElementById('cust-name').value.trim();
+    var phone = document.getElementById('cust-phone').value.trim();
+    var addr = document.getElementById('cust-addr').value.trim();
+    var notes = document.getElementById('cust-notes').value.trim();
+    if (!name || !phone || (mode === 'delivery' && !addr)) {
+      document.getElementById('details-err').textContent = 'Please fill in your name, phone' + (mode === 'delivery' ? ' and delivery address.' : '.');
+      return;
+    }
+    var t = totals();
+    var lines = Object.entries(cart).filter(([id]) => allItems[id]).map(([id, q]) => {
+      var it = allItems[id];
+      return { id: id, name: it.name, qty: q, price: it.price, line: +(it.price * q).toFixed(2) };
+    });
+    var ref = 'PPC-' + Math.floor(1000 + Math.random() * 9000);
+    var order = {
+      ref: ref, ts: Date.now(), status: 'New', mode: mode,
+      customer: { name: name, phone: phone, address: mode === 'delivery' ? addr : '', notes: notes },
+      items: lines, subtotal: +t.sub.toFixed(2), fee: +t.fee.toFixed(2), total: +t.grand.toFixed(2)
+    };
+    if (window.ppcOrders) ppcOrders.add(order);
+
+    document.getElementById('order-ref').textContent = ref;
+    document.getElementById('modal-mode-line').textContent = mode === 'delivery'
+      ? 'On its way to you within ~35–45 min.'
+      : 'Collect from 25 Causeyside St in ~15–20 min.';
+    detailsModal.classList.remove('open');
+    document.getElementById('modal').classList.add('open');
+
+    // reset for next order
+    document.getElementById('cust-name').value = '';
+    document.getElementById('cust-phone').value = '';
+    document.getElementById('cust-addr').value = '';
+    document.getElementById('cust-notes').value = '';
+    cart = {}; persist();
+  });
+
+  document.getElementById('modal-close').addEventListener('click', () => document.getElementById('modal').classList.remove('open'));
+  document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') e.target.classList.remove('open'); });
+
+  // Mobile cart sheet
+  function openMobileCart() { document.getElementById('cart-col').classList.add('open'); document.getElementById('cart-backdrop').classList.add('open'); }
+  function closeMobileCart() { document.getElementById('cart-col').classList.remove('open'); document.getElementById('cart-backdrop').classList.remove('open'); }
+  document.getElementById('mobile-cart-bar').addEventListener('click', openMobileCart);
+  document.getElementById('cart-backdrop').addEventListener('click', closeMobileCart);
+  document.getElementById('cart-pill-btn').addEventListener('click', () => {
+    if (window.matchMedia('(max-width:900px)').matches) openMobileCart();
+    else document.getElementById('cart-col').scrollIntoView({ behavior:'smooth' });
+  });
+
+  renderMenu();
+  renderCart();
+
+  // ---- Busy switch: if ordering is turned off in the manager, show the waitlist screen ----
+  (function applyOrderingStatus() {
+    var st = _d.siteStatus || { ordersOpen: true };
+    if (st.ordersOpen === false) {
+      document.getElementById('busy-title').textContent = st.busyTitle || "We're busy right now";
+      document.getElementById('busy-msg').textContent = st.busyMessage || '';
+      document.getElementById('busy-screen').style.display = 'block';
+      var hide = ['.order-layout', '.fulfil'];
+      hide.forEach(function (sel) { var n = document.querySelector(sel); if (n) n.style.display = 'none'; });
+      ['cart-pill-btn', 'mobile-cart-bar'].forEach(function (id) { var n = document.getElementById(id); if (n) n.style.display = 'none'; });
+    }
+  })();
+
+  document.getElementById('waitlist-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('waitlist-email').value.trim();
+    if (!email) return;
+    try {
+      var w = JSON.parse(localStorage.getItem('ppc_waitlist') || '[]');
+      w.push({ email: email, ts: Date.now() });
+      localStorage.setItem('ppc_waitlist', JSON.stringify(w));
+    } catch (err) {}
+    this.style.display = 'none';
+    document.getElementById('waitlist-ok').style.display = 'block';
+  });
+</script>
+</body>
+</html>

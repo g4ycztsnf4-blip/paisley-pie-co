@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Suggest a Change — Paisley Pie Co.</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --black: #000; --off: #f8f6f2; --stone: #efefeb; --muted: #6a6560; }
+
+    body { font-family: 'Inter', sans-serif; background: var(--off); color: var(--black); line-height: 1.6; }
+
+    /* NAV */
+    nav {
+      background: #000; border-bottom: 3px solid #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 62px; position: sticky; top: 0; z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem;
+      color: #fff; letter-spacing: 0.06em; text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 1.5rem; }
+    .nav-links a {
+      color: rgba(255,255,255,0.55); text-decoration: none;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+
+    /* HERO */
+    .hero { background: #000; padding: 5rem 5vw 4rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .hero-inner { max-width: 680px; }
+    .hero-label {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.15em;
+      text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .hero-label::before { content:''; display:block; width:18px; height:2px; background:#fff; opacity:0.4; }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      color: #fff; letter-spacing: 0.03em; line-height: 0.95; margin-bottom: 1.25rem;
+    }
+    .hero p { color: rgba(255,255,255,0.55); font-size: 1rem; line-height: 1.75; max-width: 500px; }
+
+    /* NOTE FORM */
+    .form-section {
+      padding: 4rem 5vw; background: var(--stone);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    .form-section h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.04em; margin-bottom: 0.5rem; }
+    .form-section > p { color: var(--muted); margin-bottom: 2rem; font-size: 0.93rem; }
+
+    .note-form { max-width: 680px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+    .form-group label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .form-group input, .form-group select, .form-group textarea {
+      border: 1.5px solid rgba(0,0,0,0.2); border-radius: 8px;
+      padding: 0.75rem 1rem; font-family: 'Inter', sans-serif;
+      font-size: 0.9rem; background: #fff; color: #000; width: 100%;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: #000;
+    }
+    .form-group textarea { resize: vertical; min-height: 140px; font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; }
+    .form-full { grid-column: 1 / -1; }
+
+    .char-count { font-size: 0.72rem; color: var(--muted); text-align: right; margin-top: 0.25rem; }
+
+    .btn-submit {
+      background: #000; color: #fff; border: none; border-radius: 8px;
+      padding: 0.9rem 2.5rem; font-size: 0.82rem; font-weight: 800;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s; margin-top: 0.5rem;
+    }
+    .btn-submit:hover { opacity: 0.75; transform: translateY(-1px); }
+
+    .success-msg {
+      display: none; background: #000; color: #fff;
+      border-radius: 8px; padding: 1rem 1.5rem; margin-top: 1rem;
+      font-weight: 600; font-size: 0.9rem;
+    }
+
+    /* NOTES BOARD */
+    .board-section { padding: 4rem 5vw; }
+    .board-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .board-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 0.04em; }
+
+    .filter-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .filter-btn {
+      background: transparent; border: 1.5px solid rgba(0,0,0,0.2);
+      border-radius: 6px; padding: 0.35rem 0.85rem;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; cursor: pointer; transition: all 0.15s;
+    }
+    .filter-btn.active, .filter-btn:hover { background: #000; color: #fff; border-color: #000; }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* Sticky note style */
+    .note-card {
+      background: #fff;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 4px 14px 14px 14px;
+      padding: 1.5rem;
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .note-card:hover { transform: translateY(-3px) rotate(0.3deg); box-shadow: 0 12px 32px rgba(0,0,0,0.1); }
+
+    /* Pin */
+    .note-card::before {
+      content: ''; position: absolute; top: -8px; left: 20px;
+      width: 16px; height: 16px; background: #000;
+      border-radius: 50%; border: 2px solid var(--off);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .note-category {
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: rgba(0,0,0,0.4); margin-bottom: 0.75rem;
+    }
+
+    .note-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic; font-size: 0.97rem;
+      color: #000; line-height: 1.65; margin-bottom: 1.25rem;
+    }
+
+    .note-footer { display: flex; align-items: center; justify-content: space-between; }
+    .note-author { font-size: 0.75rem; font-weight: 700; color: rgba(0,0,0,0.4); }
+    .helpful-btn {
+      display: flex; align-items: center; gap: 0.35rem;
+      background: var(--stone); border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 6px; padding: 0.25rem 0.65rem; cursor: pointer;
+      font-size: 0.72rem; font-weight: 700; transition: all 0.15s;
+    }
+    .helpful-btn:hover, .helpful-btn.voted { background: #000; color: #fff; }
+    .helpful-count { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; }
+
+    .empty-state { grid-column: 1/-1; text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty-state h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; margin-bottom: 0.5rem; color: #000; }
+
+    /* FOOTER */
+    footer { background: #000; border-top: 2px solid #fff; padding: 1.5rem 5vw; text-align: center; }
+    footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.82rem; }
+    footer a:hover { color: #fff; }
+
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PAISLEY PIE CO.</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="menu.html">Full Menu</a>
+    <a href="deals.html">Deals</a>
+    <a href="news.html">News</a>
+    <a href="pie-ideas.html">Pie Ideas</a>
+    <a href="suggestions.html" class="active">Suggest a Change</a>
+    <a href="order.html">Order</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Your Voice</div>
+    <h1>GOT A NOTE<br>FOR THE SHOP?</h1>
+    <p>Think something could be done better at Paisley Pie Co.? Write it like a note to Scott. He reads every one — this is how the shop keeps getting better.</p>
+  </div>
+</div>
+
+<div class="form-section">
+  <h2>WRITE YOUR NOTE</h2>
+  <p>Be honest. Be specific. Good feedback is a gift.</p>
+  <form class="note-form" id="note-form">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Your Name (or stay anonymous)</label>
+        <input type="text" id="author" placeholder="e.g. Sandra or Anonymous" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="category">
+          <option value="Food & Menu">Food & Menu</option>
+          <option value="Service">Service</option>
+          <option value="Shop Layout">Shop Layout</option>
+          <option value="Pricing">Pricing</option>
+          <option value="Opening Hours">Opening Hours</option>
+          <option value="Hygiene & Cleanliness">Hygiene & Cleanliness</option>
+          <option value="General">General</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group form-full">
+        <label>Your Note to Scott</label>
+        <textarea id="note-text" placeholder="I think if you done this in the store it would be better..." maxlength="500" required></textarea>
+        <div class="char-count"><span id="char-remaining">500</span> characters remaining</div>
+      </div>
+    </div>
+    <button type="submit" class="btn-submit">Send My Note →</button>
+    <div class="success-msg" id="success-msg">📝 Note sent! Scott will see this. Thank you for helping make the shop better.</div>
+  </form>
+</div>
+
+<div class="board-section">
+  <div class="board-header">
+    <h2>THE NOTICE BOARD</h2>
+    <div class="filter-btns">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="Food & Menu">Food</button>
+      <button class="filter-btn" data-filter="Service">Service</button>
+      <button class="filter-btn" data-filter="Shop Layout">Layout</button>
+      <button class="filter-btn" data-filter="Pricing">Pricing</button>
+    </div>
+  </div>
+  <div class="notes-grid" id="notes-grid"></div>
+</div>
+
+<footer>
+  <a href="index.html">← Back to Paisley Pie Co.</a> <span style="opacity:0.4">·</span> <a href="admin.html">Manage</a>
+</footer>
+
+<script>
+  const STORAGE_KEY = 'ppc_suggestions';
+  let activeFilter = 'all';
+
+  const seeds = [
+    { id: 1, author: 'Margaret', category: 'Service', text: 'I think if you done a number system for orders it would be better. Sometimes it's hard to know whose turn it is when it gets busy.', helpful: 14, voted: false, ts: Date.now() - 86400000 * 4 },
+    { id: 2, author: 'Anonymous', category: 'Food & Menu', text: 'I think if you done a pie of the week special on a chalkboard outside it would be better. Would get people coming in who wouldn't normally stop.', helpful: 22, voted: false, ts: Date.now() - 86400000 * 3 },
+    { id: 3, author: 'Derek', category: 'Opening Hours', text: 'I think if you done a late Thursday or Friday opening until 7pm it would be better. A lot of folk finish work after 5 and can't make it in time.', helpful: 31, voted: false, ts: Date.now() - 86400000 * 2 },
+    { id: 4, author: 'Joanne', category: 'Shop Layout', text: 'I think if you done a wee seating area outside — even just two tables — it would be better. The weather's no always bad in Paisley!', helpful: 18, voted: false, ts: Date.now() - 86400000 },
+    { id: 5, author: 'Anonymous', category: 'Food & Menu', text: 'I think if you done a loyalty card — buy 9 pies get 1 free — it would be better for regulars like me who come in three times a week.', helpful: 27, voted: false, ts: Date.now() - 3600000 * 8 },
+    { id: 6, author: 'Carol', category: 'Service', text: 'I think if you done an online pre-order system it would be better. Sometimes the queue is long and I'm on a lunch break.', helpful: 19, voted: false, ts: Date.now() - 3600000 * 3 },
+  ];
+
+  function load() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(seeds)); return seeds; }
+    return JSON.parse(raw);
+  }
+
+  function save(notes) { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); }
+
+  function render() {
+    const notes = load();
+    const filtered = activeFilter === 'all' ? notes : notes.filter(n => n.category === activeFilter);
+    const sorted = [...filtered].sort((a, b) => b.helpful - a.helpful);
+    const grid = document.getElementById('notes-grid');
+    if (!sorted.length) {
+      grid.innerHTML = '<div class="empty-state"><h3>No notes yet.</h3><p>Be the first to leave one above.</p></div>';
+      return;
+    }
+    grid.innerHTML = sorted.map(note => `
+      <div class="note-card">
+        <div class="note-category">${note.category}</div>
+        <div class="note-text">"${note.text}"</div>
+        <div class="note-footer">
+          <span class="note-author">— ${note.author || 'Anonymous'}</span>
+          <button class="helpful-btn ${note.voted ? 'voted' : ''}" onclick="helpful(${note.id})">
+            👍 <span class="helpful-count">${note.helpful}</span>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function helpful(id) {
+    const notes = load();
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    note.voted = !note.voted;
+    note.helpful += note.voted ? 1 : -1;
+    save(notes);
+    render();
+  }
+
+  document.getElementById('note-text').addEventListener('input', function() {
+    document.getElementById('char-remaining').textContent = 500 - this.value.length;
+  });
+
+  document.getElementById('note-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const text = document.getElementById('note-text').value.trim();
+    if (!text) return;
+    const notes = load();
+    notes.unshift({
+      id: Date.now(),
+      author: document.getElementById('author').value.trim() || 'Anonymous',
+      category: document.getElementById('category').value,
+      text,
+      helpful: 0,
+      voted: false,
+      ts: Date.now()
+    });
+    save(notes);
+    this.reset();
+    document.getElementById('char-remaining').textContent = '500';
+    const msg = document.getElementById('success-msg');
+    msg.style.display = 'block';
+    setTimeout(() => { msg.style.display = 'none'; }, 4000);
+    activeFilter = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-filter="all"]').classList.add('active');
+    render();
+    document.querySelector('.board-section').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      activeFilter = this.dataset.filter;
+      render();
+    });
+  });
+
+  render();
+</script>
+</body>
+</html>

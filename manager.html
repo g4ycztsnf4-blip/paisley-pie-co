@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manager Portal — Paisley Pie Co.</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --black:#000; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; --red:#a80f0f; --line:rgba(0,0,0,0.12); }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--black); line-height:1.5; }
+
+    .topbar { position:sticky; top:0; z-index:50; background:#000; color:#fff; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:0.85rem 4vw; border-bottom:3px solid #fff; flex-wrap:wrap; }
+    .topbar .brand { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.05em; }
+    .topbar .brand small { display:block; font-family:'Inter',sans-serif; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.5); font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+    .who { color:rgba(255,255,255,0.75); font-size:0.72rem; font-weight:700; }
+    .btn { border:none; border-radius:8px; padding:0.6rem 1.1rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.74rem; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition:opacity 0.15s,transform 0.12s; text-decoration:none; display:inline-block; }
+    .btn:hover { opacity:0.85; } .btn:active { transform:scale(0.97); }
+    .btn-dark { background:#000; color:#fff; } .btn-light { background:var(--stone); color:#000; }
+    .btn-green { background:var(--green); color:#fff; } .btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.3); }
+    .btn-danger { background:transparent; color:var(--red); border:1.5px solid rgba(168,15,15,0.4); }
+    .btn-sm { padding:0.4rem 0.75rem; font-size:0.66rem; }
+
+    .help { background:var(--stone); border-bottom:1px solid var(--line); padding:0.85rem 4vw; font-size:0.82rem; color:#333; }
+    .help strong { color:#000; }
+
+    .tabs { display:flex; gap:0.5rem; padding:1rem 4vw 0; flex-wrap:wrap; }
+    .tab { background:transparent; border:1.5px solid var(--line); border-bottom:none; border-radius:10px 10px 0 0; padding:0.65rem 1.25rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; color:var(--muted); }
+    .tab.active { background:#000; color:#fff; border-color:#000; }
+
+    .wrap { max-width:1000px; margin:0 auto; padding:1.5rem 4vw 5rem; }
+    .panel { display:none; } .panel.active { display:block; }
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+    .panel-head h2 { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:0.03em; }
+
+    .card { background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:1.25rem; margin-bottom:1rem; }
+    .cat-title { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.03em; margin:1.5rem 0 0.75rem; padding-bottom:0.35rem; border-bottom:2px solid #000; }
+    .cat-title:first-child { margin-top:0; }
+    .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.85rem; }
+    .field { display:flex; flex-direction:column; gap:0.3rem; }
+    .field.full { grid-column:1 / -1; }
+    .field label { font-size:0.66rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+    .field input, .field select { border:1.5px solid var(--line); border-radius:8px; padding:0.6rem 0.7rem; font-family:'Inter',sans-serif; font-size:0.88rem; background:var(--off); color:#000; width:100%; }
+    .field input:focus, .field select:focus { outline:none; border-color:#000; background:#fff; }
+    .hint { font-size:0.7rem; color:var(--muted); }
+    .toolbar { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:1rem; }
+    .toolbar .spacer { flex:1; }
+
+    /* rota day */
+    .day { background:#fff; border:1.5px solid var(--line); border-radius:12px; padding:1rem 1.1rem; margin-bottom:0.75rem; }
+    .day-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.6rem; }
+    .day-head h4 { font-family:'Bebas Neue',sans-serif; font-size:1.15rem; letter-spacing:0.03em; }
+    .day-head .hrs { font-size:0.72rem; color:var(--muted); }
+    .shift { display:grid; grid-template-columns:1.4fr 0.8fr 0.8fr auto; gap:0.5rem; align-items:center; margin-bottom:0.5rem; }
+    .shift select, .shift input { border:1.5px solid var(--line); border-radius:8px; padding:0.45rem 0.55rem; font-family:'Inter',sans-serif; font-size:0.82rem; background:var(--off); }
+    .shift .x { background:transparent; border:1.5px solid rgba(168,15,15,0.4); color:var(--red); border-radius:8px; cursor:pointer; font-weight:800; padding:0.35rem 0.6rem; }
+    .empty-day { color:var(--muted); font-size:0.82rem; padding:0.3rem 0; }
+
+    /* worker rows */
+    .worker { display:grid; grid-template-columns:1.2fr 1.4fr 1fr 0.7fr auto; gap:0.6rem; align-items:center; margin-bottom:0.6rem; }
+    .worker input { border:1.5px solid var(--line); border-radius:8px; padding:0.5rem 0.6rem; font-family:'Inter',sans-serif; font-size:0.85rem; background:var(--off); }
+    .worker .x { background:transparent; border:1.5px solid rgba(168,15,15,0.4); color:var(--red); border-radius:8px; cursor:pointer; font-weight:800; padding:0.4rem 0.65rem; }
+
+    /* reports */
+    .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:0.85rem; margin-bottom:1.25rem; }
+    .kpi { background:#000; color:#fff; border-radius:14px; padding:1.1rem 1.25rem; }
+    .kpi strong { display:block; font-family:'Bebas Neue',sans-serif; font-size:2rem; line-height:1; }
+    .kpi span { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em; color:rgba(255,255,255,0.55); }
+    table.rep { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    table.rep th, table.rep td { text-align:left; padding:0.55rem 0.5rem; border-bottom:1px solid var(--line); }
+    table.rep th { font-size:0.66rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); }
+    table.rep td.num, table.rep th.num { text-align:right; }
+    .bar { background:var(--stone); border-radius:5px; height:14px; position:relative; overflow:hidden; min-width:40px; }
+    .bar > span { position:absolute; left:0; top:0; bottom:0; background:#000; border-radius:5px; }
+    .suggest-pill { display:inline-block; background:var(--green); color:#fff; font-weight:800; border-radius:999px; padding:0.1rem 0.6rem; font-size:0.8rem; }
+    .empty { text-align:center; color:var(--muted); padding:3rem 1rem; }
+    .empty .big { font-size:2.5rem; display:block; margin-bottom:0.5rem; }
+
+    /* modal */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; padding:5vw; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:16px; max-width:560px; width:100%; max-height:86vh; overflow:auto; padding:1.75rem; }
+    .modal h3 { font-family:'Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:0.03em; margin-bottom:0.5rem; }
+    .msg-card { border:1.5px solid var(--line); border-radius:12px; padding:1rem; margin-bottom:0.85rem; }
+    .msg-card .who2 { font-weight:800; margin-bottom:0.3rem; }
+    .msg-card pre { white-space:pre-wrap; font-family:'Inter',sans-serif; font-size:0.84rem; color:#333; background:var(--off); border-radius:8px; padding:0.7rem; margin:0.5rem 0; }
+    .msg-card .send { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .toast { position:fixed; bottom:1.25rem; left:50%; transform:translateX(-50%) translateY(150%); background:#000; color:#fff; padding:0.85rem 1.5rem; border-radius:10px; font-weight:700; font-size:0.85rem; z-index:300; transition:transform 0.3s; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+
+    /* LOGIN GATE */
+    .lock { position:fixed; inset:0; z-index:500; background:#000; display:flex; align-items:center; justify-content:center; padding:6vw; }
+    .lock.hidden { display:none; }
+    .lock-box { background:#111; border:1.5px solid rgba(255,255,255,0.15); border-radius:16px; padding:2.25rem; max-width:360px; width:100%; text-align:center; }
+    .lock-box .ico { font-size:2.4rem; }
+    .lock-box h1 { font-family:'Bebas Neue',sans-serif; color:#fff; font-size:2rem; letter-spacing:0.04em; margin:0.5rem 0 0.25rem; }
+    .lock-box p { color:rgba(255,255,255,0.5); font-size:0.82rem; margin-bottom:1.25rem; }
+    .lock-box input { width:100%; border:1.5px solid rgba(255,255,255,0.2); background:#000; color:#fff; border-radius:10px; padding:0.8rem 1rem; font-size:0.95rem; text-align:center; font-family:'Inter',sans-serif; }
+    .lock-box input:focus { outline:none; border-color:#fff; }
+    .lock-box button { width:100%; margin-top:0.75rem; background:var(--green); color:#fff; border:none; border-radius:10px; padding:0.85rem; font-weight:800; font-size:0.8rem; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; font-family:'Inter',sans-serif; }
+    .lock-err { color:#ff6b6b; font-size:0.78rem; margin-top:0.75rem; min-height:1em; }
+    .lock-box.shake { animation:shk 0.35s; }
+    @keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN GATE (shares the same staff accounts as the admin) -->
+<div class="lock" id="lock">
+  <form class="lock-box" id="login-box">
+    <div class="ico">🗓️</div>
+    <h1>MANAGER LOGIN</h1>
+    <p>Sign in to manage rotas, team &amp; reports.</p>
+    <input type="text" id="login-user" placeholder="Username (e.g. chloe.admin)" autocomplete="username" autofocus />
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password" style="margin-top:0.6rem" />
+    <button type="submit">Log in</button>
+    <div class="lock-err" id="login-err"></div>
+  </form>
+  <form class="lock-box" id="change-box" style="display:none">
+    <div class="ico">🔑</div>
+    <h1>SET YOUR PASSWORD</h1>
+    <p id="change-sub">First login — please choose your own password.</p>
+    <input type="password" id="new-pw" placeholder="New password (min 6 characters)" autocomplete="new-password" />
+    <input type="password" id="new-pw2" placeholder="Confirm new password" autocomplete="new-password" style="margin-top:0.6rem" />
+    <button type="submit">Save &amp; continue</button>
+    <div class="lock-err" id="change-err"></div>
+  </form>
+</div>
+
+<div class="topbar">
+  <div class="brand">PAISLEY PIE CO.<small>Manager Portal</small></div>
+  <div class="topbar-actions">
+    <span class="who" id="who"></span>
+    <a href="admin.html" class="btn btn-ghost btn-sm">Website manager →</a>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+  </div>
+</div>
+
+<div class="help">
+  🗓️ Build the weekly <strong>rota</strong>, manage your <strong>team</strong>, and check <strong>reports &amp; staffing</strong>. Publishing a rota gives you ready-to-send messages — tap <strong>Email</strong> or <strong>Text</strong> to send each from your own device.
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="rota">📅 Rota</button>
+  <button class="tab" data-tab="team">👥 Team</button>
+  <button class="tab" data-tab="reports">📊 Reports &amp; Staffing</button>
+</div>
+
+<div class="wrap">
+  <div class="panel active" id="panel-rota"></div>
+  <div class="panel" id="panel-team"></div>
+  <div class="panel" id="panel-reports"></div>
+</div>
+
+<!-- PUBLISH ROTA MODAL -->
+<div class="overlay" id="rota-modal">
+  <div class="modal">
+    <h3>Send the rota</h3>
+    <p style="font-size:0.88rem;color:#444;margin-bottom:1rem">Tap <strong>Email</strong> or <strong>Text</strong> next to each person to send their shifts from your own phone/computer. (Auto-sending in bulk needs an email/SMS service — ask to have that wired in.)</p>
+    <div id="rota-messages"></div>
+    <div style="text-align:right;margin-top:0.5rem"><button class="btn btn-dark" id="rota-modal-close">Done</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="orders.js"></script>
+<script src="audit.js"></script>
+<script>
+/* ---------------- LOGIN GATE (same accounts as admin) ---------------- */
+(function () {
+  function sha256(str){ str = unescape(encodeURIComponent(str)); function rr(v,a){return (v>>>a)|(v<<(32-a));} var mp=Math.pow,maxWord=mp(2,32),result='',words=[],i,j; var bitLen=str.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[]; var pc=k.length,comp={}; for(var cand=2;pc<64;cand++){ if(!comp[cand]){ for(i=0;i<313;i+=cand)comp[i]=cand; hash[pc]=(mp(cand,.5)*maxWord)|0; k[pc++]=(mp(cand,1/3)*maxWord)|0; } } str+='\x80'; while(str.length%64-56)str+='\x00'; for(i=0;i<str.length;i++){ j=str.charCodeAt(i); if(j>>8)return ''; words[i>>2]|=j<<((3-i)%4)*8; } words[words.length]=(bitLen/maxWord)|0; words[words.length]=bitLen; for(j=0;j<words.length;){ var w=words.slice(j,j+=16),oldHash=hash; hash=hash.slice(0,8); for(i=0;i<64;i++){ var w15=w[i-15],w2=w[i-2]; var a=hash[0],e=hash[4]; var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0); var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2])); hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0; } for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0; } for(i=0;i<8;i++)for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16);} return result; }
+  var DEFAULT_HASH = sha256('paisleypie');
+  var USERS_KEY = 'ppc_admin_users', SESSION_KEY = 'ppc_admin_user';
+  var SEED = [
+    { username:'chloe.admin', name:'Chloe', hash:DEFAULT_HASH, mustChange:true },
+    { username:'michael.admin', name:'Michael', hash:DEFAULT_HASH, mustChange:true },
+    { username:'scott.admin', name:'Scott', hash:DEFAULT_HASH, mustChange:true }
+  ];
+  function loadUsers(){ try { var u=JSON.parse(localStorage.getItem(USERS_KEY)); if(u&&u.length)return u; } catch(e){} localStorage.setItem(USERS_KEY, JSON.stringify(SEED)); return JSON.parse(JSON.stringify(SEED)); }
+  function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+  function findUser(n){ n=(n||'').toLowerCase().trim(); return loadUsers().filter(function(x){return x.username===n;})[0]||null; }
+  window.ppcCurrentUser = function(){ var su=sessionStorage.getItem(SESSION_KEY); return su?findUser(su):null; };
+  window.ppcLogout = function(){ sessionStorage.removeItem(SESSION_KEY); location.reload(); };
+
+  var lock=document.getElementById('lock'), loginBox=document.getElementById('login-box'), changeBox=document.getElementById('change-box'), pending=null;
+  function shake(b){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+  function grant(u){ sessionStorage.setItem(SESSION_KEY,u.username); lock.classList.add('hidden'); if(typeof window.ppcOnLogin==='function') window.ppcOnLogin(u); }
+  (function(){ var su=sessionStorage.getItem(SESSION_KEY); if(su){ var u=findUser(su); if(u&&!u.mustChange) grant(u); } })();
+
+  loginBox.addEventListener('submit', function(e){ e.preventDefault();
+    var u=findUser(document.getElementById('login-user').value), pw=document.getElementById('login-pw').value;
+    if(!u || sha256(pw)!==u.hash){ document.getElementById('login-err').textContent='Wrong username or password.'; shake(loginBox); document.getElementById('login-pw').value=''; return; }
+    document.getElementById('login-err').textContent='';
+    if(u.mustChange){ pending=u; document.getElementById('change-sub').textContent='Hi '+u.name+" — it's your first login. Please choose your own password."; loginBox.style.display='none'; changeBox.style.display=''; document.getElementById('new-pw').focus(); return; }
+    grant(u);
+  });
+  changeBox.addEventListener('submit', function(e){ e.preventDefault();
+    var p1=document.getElementById('new-pw').value, p2=document.getElementById('new-pw2').value, err=document.getElementById('change-err');
+    if(p1.length<6){ err.textContent='Password must be at least 6 characters.'; shake(changeBox); return; }
+    if(p1!==p2){ err.textContent='Passwords do not match.'; shake(changeBox); return; }
+    if(sha256(p1)===DEFAULT_HASH){ err.textContent='Please pick something other than the default password.'; shake(changeBox); return; }
+    var users=loadUsers(); for(var i=0;i<users.length;i++){ if(users[i].username===pending.username){ users[i].hash=sha256(p1); users[i].mustChange=false; pending=users[i]; } }
+    saveUsers(users); grant(pending);
+  });
+})();
+
+/* ---------------- MANAGER APP ---------------- */
+(function () {
+  var TEAM_KEY = 'ppc_team', ROTA_KEY = 'ppc_rota';
+  var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var DAYFULL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
+  function el(t,c,h){ var e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; }
+  function money(n){ return '£'+Number(n||0).toFixed(2); }
+  function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},2200); }
+
+  function loadTeam(){ try { return JSON.parse(localStorage.getItem(TEAM_KEY))||[]; } catch(e){ return []; } }
+  function saveTeam(t){ localStorage.setItem(TEAM_KEY, JSON.stringify(t)); }
+  function defaultRota(){ var r={ weekStart: nextMonday(), days:{} }; DAYS.forEach(function(d){ r.days[d]=[]; }); return r; }
+  function loadRota(){ try { var r=JSON.parse(localStorage.getItem(ROTA_KEY)); if(r&&r.days)return r; } catch(e){} return defaultRota(); }
+  function saveRota(r){ localStorage.setItem(ROTA_KEY, JSON.stringify(r)); }
+  function nextMonday(){ var d=new Date(); var day=d.getDay(); var add=(day===1)?0:((8-day)%7); d.setDate(d.getDate()+add); return d.toISOString().slice(0,10); }
+  function fmtDate(iso){ try { return new Date(iso+'T00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); } catch(e){ return iso; } }
+
+  var team = loadTeam();
+  var rota = loadRota();
+
+  // ---------------- ROTA ----------------
+  function renderRota() {
+    var panel = document.getElementById('panel-rota'); panel.innerHTML='';
+    var head = el('div','panel-head'); head.appendChild(el('h2',null,'Weekly Rota'));
+    var pub = el('button','btn btn-green','📨 Publish &amp; send'); pub.addEventListener('click', publishRota);
+    head.appendChild(pub); panel.appendChild(head);
+
+    var top = el('div','card');
+    var r = el('div','row');
+    var wk = el('div','field'); wk.appendChild(el('label',null,'Week beginning'));
+    var inp = el('input'); inp.type='date'; inp.value=rota.weekStart; inp.addEventListener('change',function(){ rota.weekStart=inp.value; saveRota(rota); renderRota(); });
+    wk.appendChild(inp); r.appendChild(wk);
+    var info = el('div','field'); info.appendChild(el('label',null,'Team members')); info.appendChild(el('div','hint', team.length ? (team.length+' people — add more in the Team tab') : 'No team yet — add people in the Team tab first')); r.appendChild(info);
+    top.appendChild(r); panel.appendChild(top);
+
+    if (!team.length) { panel.appendChild(el('div','empty','<span class="big">👥</span>Add your team first, then build the rota.')); return; }
+
+    DAYS.forEach(function(d){
+      var day = el('div','day');
+      var dh = el('div','day-head');
+      dh.appendChild(el('h4',null,DAYFULL[d]));
+      var totalHrs = (rota.days[d]||[]).reduce(function(s,sh){ return s+shiftHours(sh); },0);
+      dh.appendChild(el('div','hrs', totalHrs ? (totalHrs.toFixed(1)+' staff-hours') : ''));
+      day.appendChild(dh);
+
+      (rota.days[d]||[]).forEach(function(sh, idx){
+        var row = el('div','shift');
+        var sel = el('select');
+        sel.appendChild(new Option('— pick —',''));
+        team.forEach(function(w){ var o=new Option(w.name, w.id); if(w.id===sh.workerId)o.selected=true; sel.appendChild(o); });
+        sel.addEventListener('change',function(){ sh.workerId=sel.value; saveRota(rota); });
+        var st=el('input'); st.type='time'; st.value=sh.start||'09:00'; st.addEventListener('change',function(){ sh.start=st.value; saveRota(rota); renderRota(); });
+        var en=el('input'); en.type='time'; en.value=sh.end||'17:00'; en.addEventListener('change',function(){ sh.end=en.value; saveRota(rota); renderRota(); });
+        var x=el('button','x','✕'); x.addEventListener('click',function(){ rota.days[d].splice(idx,1); saveRota(rota); renderRota(); });
+        row.appendChild(sel); row.appendChild(st); row.appendChild(en); row.appendChild(x);
+        day.appendChild(row);
+      });
+      if (!(rota.days[d]||[]).length) day.appendChild(el('div','empty-day','No one on this day yet.'));
+      var add = el('button','btn btn-light btn-sm','+ Add shift');
+      add.addEventListener('click',function(){ rota.days[d]=rota.days[d]||[]; rota.days[d].push({ workerId: team[0].id, start:'09:00', end:'17:00' }); saveRota(rota); renderRota(); });
+      day.appendChild(add);
+      panel.appendChild(day);
+    });
+  }
+
+  function shiftHours(sh){ if(!sh.start||!sh.end) return 0; var a=toMin(sh.start), b=toMin(sh.end); return b>a ? (b-a)/60 : 0; }
+  function toMin(t){ var p=(t||'').split(':'); return (+p[0])*60 + (+p[1]||0); }
+  function workerName(id){ var w=team.filter(function(x){return x.id===id;})[0]; return w?w.name:'(unassigned)'; }
+  function workerById(id){ return team.filter(function(x){return x.id===id;})[0]; }
+
+  function publishRota() {
+    if (!team.length) { toast('Add team members first'); return; }
+    // build per-worker message
+    var byWorker = {};
+    DAYS.forEach(function(d){ (rota.days[d]||[]).forEach(function(sh){ if(!sh.workerId)return; (byWorker[sh.workerId]=byWorker[sh.workerId]||[]).push({ d:d, start:sh.start, end:sh.end }); }); });
+    var box = document.getElementById('rota-messages'); box.innerHTML='';
+    var anyone = false;
+    team.forEach(function(w){
+      var shifts = byWorker[w.id];
+      if (!shifts || !shifts.length) return;
+      anyone = true;
+      var lines = shifts.map(function(s){ return DAYFULL[s.d] + ': ' + s.start + '–' + s.end; }).join('\n');
+      var msg = 'Hi ' + w.name + ', your shifts for the week beginning ' + fmtDate(rota.weekStart) + ':\n' + lines + '\n— Paisley Pie Co.';
+      var card = el('div','msg-card');
+      card.appendChild(el('div','who2', esc(w.name) + (w.email?(' · '+esc(w.email)):'') + (w.phone?(' · '+esc(w.phone)):'')));
+      var pre = el('pre'); pre.textContent = msg; card.appendChild(pre);
+      var send = el('div','send');
+      var copy = el('button','btn btn-light btn-sm','Copy'); copy.addEventListener('click',function(){ navigator.clipboard && navigator.clipboard.writeText(msg); toast('Copied'); });
+      send.appendChild(copy);
+      if (w.email){ var ml=el('a','btn btn-dark btn-sm','✉ Email'); ml.href='mailto:'+encodeURIComponent(w.email)+'?subject='+encodeURIComponent('Your Paisley Pie Co. rota')+'&body='+encodeURIComponent(msg); send.appendChild(ml); }
+      if (w.phone){ var sm=el('a','btn btn-dark btn-sm','💬 Text'); sm.href='sms:'+encodeURIComponent(w.phone)+'?&body='+encodeURIComponent(msg); send.appendChild(sm); }
+      card.appendChild(send);
+      box.appendChild(card);
+    });
+    if (!anyone) box.innerHTML = '<div class="empty">No shifts assigned yet.</div>';
+    rota.publishedAt = Date.now(); saveRota(rota);
+    if (window.ppcAudit) ppcAudit.log('Published the rota', 'week of ' + fmtDate(rota.weekStart));
+    document.getElementById('rota-modal').classList.add('open');
+  }
+  document.getElementById('rota-modal-close').addEventListener('click',function(){ document.getElementById('rota-modal').classList.remove('open'); });
+  document.getElementById('rota-modal').addEventListener('click',function(e){ if(e.target.id==='rota-modal') e.target.classList.remove('open'); });
+
+  // ---------------- TEAM ----------------
+  function renderTeam() {
+    var panel = document.getElementById('panel-team'); panel.innerHTML='';
+    var head = el('div','panel-head'); head.appendChild(el('h2',null,'Team'));
+    var add = el('button','btn btn-dark','+ Add team member'); add.addEventListener('click',function(){ team.push({ id:'w'+Date.now(), name:'', email:'', phone:'', rate:11.44 }); saveTeam(team); if(window.ppcAudit)ppcAudit.log('Added a team member'); renderTeam(); });
+    head.appendChild(add); panel.appendChild(head);
+
+    if (!team.length) { panel.appendChild(el('div','empty','<span class="big">👥</span>No team members yet.<br>Add your staff so you can build rotas and notify them.')); return; }
+
+    var card = el('div','card');
+    var header = el('div','worker'); header.style.fontWeight='800'; header.style.fontSize='0.66rem'; header.style.textTransform='uppercase'; header.style.color='var(--muted)';
+    ['Name','Email','Phone','£/hr',''].forEach(function(h){ header.appendChild(el('div',null,h)); });
+    card.appendChild(header);
+    team.forEach(function(w){
+      var row = el('div','worker');
+      var n=el('input'); n.placeholder='Name'; n.value=w.name||''; n.addEventListener('input',function(){ w.name=n.value; saveTeam(team); });
+      var e=el('input'); e.type='email'; e.placeholder='email@…'; e.value=w.email||''; e.addEventListener('input',function(){ w.email=e.value; saveTeam(team); });
+      var p=el('input'); p.type='tel'; p.placeholder='07…'; p.value=w.phone||''; p.addEventListener('input',function(){ w.phone=p.value; saveTeam(team); });
+      var rt=el('input'); rt.type='number'; rt.step='0.10'; rt.value=w.rate!=null?w.rate:''; rt.addEventListener('input',function(){ w.rate=parseFloat(rt.value)||0; saveTeam(team); });
+      var x=el('button','x','✕'); x.addEventListener('click',function(){ if(!confirm('Remove '+(w.name||'this person')+'?'))return; team=team.filter(function(t){return t!==w;}); saveTeam(team); if(window.ppcAudit)ppcAudit.log('Removed a team member', w.name); renderTeam(); });
+      row.appendChild(n); row.appendChild(e); row.appendChild(p); row.appendChild(rt); row.appendChild(x);
+      card.appendChild(row);
+    });
+    panel.appendChild(card);
+    panel.appendChild(el('div','hint','£/hr is used for the staffing-cost estimate in Reports. Default is the current UK adult minimum wage — adjust as needed.'));
+  }
+
+  // ---------------- REPORTS & STAFFING ----------------
+  var rangeDays = 30;
+  var capacity = 12;      // orders one staff member can handle per hour
+  var targetLabour = 30;  // target labour cost as % of sales
+
+  function renderReports() {
+    var panel = document.getElementById('panel-reports'); panel.innerHTML='';
+    panel.appendChild(el('div','panel-head','<h2>Reports &amp; Staffing</h2>'));
+
+    var orders = (window.ppcOrders ? ppcOrders.list() : []);
+    var since = Date.now() - rangeDays*86400000;
+    var inRange = orders.filter(function(o){ return o.ts >= since; });
+
+    // controls
+    var ctl = el('div','card');
+    var cr = el('div','row');
+    cr.appendChild(numField('Show last (days)', rangeDays, function(v){ rangeDays=Math.max(1,v||30); renderReports(); }));
+    cr.appendChild(numField('Orders 1 staff handles /hr', capacity, function(v){ capacity=Math.max(1,v||12); renderReports(); }));
+    cr.appendChild(numField('Target labour % of sales', targetLabour, function(v){ targetLabour=Math.max(5,v||30); renderReports(); }));
+    ctl.appendChild(cr);
+    panel.appendChild(ctl);
+
+    if (!inRange.length) {
+      panel.appendChild(el('div','empty','<span class="big">📊</span>No orders in this period yet.<br>Once orders come in (via the order page), you\'ll see demand patterns and staffing suggestions here.'));
+      return;
+    }
+
+    var revenue = inRange.reduce(function(s,o){ return s+(o.total||0); },0);
+    var avg = revenue / inRange.length;
+
+    // by weekday + by hour
+    var byDow = [0,0,0,0,0,0,0];          // Sun..Sat counts
+    var dowRevenue = [0,0,0,0,0,0,0];
+    var dowDates = [{},{},{},{},{},{},{}]; // unique dates per weekday (to average)
+    var byHour = {};
+    inRange.forEach(function(o){
+      var d=new Date(o.ts); var dow=d.getDay(); var hr=d.getHours();
+      byDow[dow]++; dowRevenue[dow]+=(o.total||0); dowDates[dow][d.toISOString().slice(0,10)]=1;
+      byHour[hr]=(byHour[hr]||0)+1;
+    });
+    var dowOrder=[1,2,3,4,5,6,0]; // Mon..Sun
+    var dowLabel={0:'Sun',1:'Mon',2:'Tue',3:'Wed',4:'Thu',5:'Fri',6:'Sat'};
+
+    // KPIs
+    var peakHour=null,peakHourC=0; Object.keys(byHour).forEach(function(h){ if(byHour[h]>peakHourC){peakHourC=byHour[h];peakHour=+h;} });
+    var busiestDow=1,busiestC=-1; dowOrder.forEach(function(d){ if(byDow[d]>busiestC){busiestC=byDow[d];busiestDow=d;} });
+    var kp=el('div','kpis');
+    kp.appendChild(kpi(inRange.length,'Orders'));
+    kp.appendChild(kpi(money(revenue),'Revenue'));
+    kp.appendChild(kpi(money(avg),'Avg order'));
+    kp.appendChild(kpi(dowLabel[busiestDow],'Busiest day'));
+    kp.appendChild(kpi(peakHour!=null?(peakHour+':00'):'—','Peak hour'));
+    panel.appendChild(kp);
+
+    // staffing table
+    var avgRate = team.length ? (team.reduce(function(s,w){return s+(w.rate||0);},0)/team.length) : 11.44;
+    panel.appendChild(el('div','cat-title','Suggested staffing by day'));
+    var note = el('div','hint'); note.style.marginBottom='0.75rem';
+    note.innerHTML = 'Based on the busiest hour each weekday in the last '+rangeDays+' days. Suggestion = enough staff to cover peak demand at '+capacity+' orders/person/hour, while keeping labour under '+targetLabour+'% of that day\'s sales (avg £/hr '+money(avgRate)+').';
+    panel.appendChild(note);
+
+    var card=el('div','card');
+    var tbl=el('table','rep');
+    tbl.innerHTML='<tr><th>Day</th><th class="num">Avg orders</th><th class="num">Peak hr orders</th><th class="num">Avg sales</th><th class="num">Suggested staff</th><th class="num">Est. labour</th></tr>';
+    var maxAvg=1; dowOrder.forEach(function(d){ var n=Object.keys(dowDates[d]).length||1; maxAvg=Math.max(maxAvg, byDow[d]/n); });
+    dowOrder.forEach(function(d){
+      var occur = Object.keys(dowDates[d]).length || 0;
+      var avgOrders = occur ? byDow[d]/occur : 0;
+      // peak-hour orders for this weekday (avg): approximate from overall peak share
+      var peakOrders = occur ? Math.max.apply(null, hoursForDow(inRange,d,occur)) : 0;
+      var openHrs = 8; // assumed trading hours per day for cost estimate
+      // demand-based staff
+      var byDemand = Math.max(1, Math.ceil(peakOrders / capacity));
+      // budget cap: labour <= target% of sales
+      var sales = occur ? dowRevenue[d]/occur : 0;
+      var maxByBudget = sales>0 ? Math.max(1, Math.floor((sales*(targetLabour/100)) / (avgRate*openHrs))) : byDemand;
+      var suggested = Math.max(1, Math.min(byDemand, Math.max(1,maxByBudget)));
+      if (avgOrders===0) suggested = 0;
+      var labour = suggested*avgRate*openHrs;
+      var tr=el('tr');
+      tr.innerHTML = '<td>'+dowLabel[d]+'</td>'+
+        '<td class="num">'+avgOrders.toFixed(1)+'</td>'+
+        '<td class="num">'+peakOrders.toFixed(0)+'</td>'+
+        '<td class="num">'+money(sales)+'</td>'+
+        '<td class="num">'+(suggested? '<span class="suggest-pill">'+suggested+'</span>' : '—')+'</td>'+
+        '<td class="num">'+(suggested?money(labour):'—')+'</td>';
+      tbl.appendChild(tr);
+    });
+    card.appendChild(tbl);
+    panel.appendChild(card);
+
+    // rota vs suggestion (if a rota exists)
+    panel.appendChild(el('div','hint','Tip: open the Rota tab and match the number of people each day to the “suggested staff” here — busy days get more cover, quiet days fewer, so you’re not paying for idle hands.'));
+  }
+
+  function hoursForDow(orders, dow, occur){
+    // returns array of per-hour counts (averaged over the number of that-weekday occurrences)
+    var buckets={};
+    orders.forEach(function(o){ var d=new Date(o.ts); if(d.getDay()===dow){ var h=d.getHours(); buckets[h]=(buckets[h]||0)+1; } });
+    var arr=Object.keys(buckets).map(function(h){ return buckets[h]/(occur||1); });
+    return arr.length?arr:[0];
+  }
+  function kpi(v,l){ var k=el('div','kpi'); k.appendChild(el('strong',null,String(v))); k.appendChild(el('span',null,l)); return k; }
+  function numField(label,val,onInput){ var f=el('div','field'); f.appendChild(el('label',null,label)); var i=el('input'); i.type='number'; i.value=val; i.addEventListener('input',function(){ onInput(parseFloat(i.value)); }); f.appendChild(i); return f; }
+
+  // ---------------- shell ----------------
+  var RENDERERS = { rota: renderRota, team: renderTeam, reports: renderReports };
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+      document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('active');});
+      t.classList.add('active'); document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+      if (RENDERERS[t.dataset.tab]) RENDERERS[t.dataset.tab](); // refresh (rota depends on team, reports on orders)
+    });
+  });
+  function refreshWho(){ var u=(typeof window.ppcCurrentUser==='function')?ppcCurrentUser():null; document.getElementById('who').textContent = u?('👤 '+u.name):''; }
+  document.getElementById('logout-btn').addEventListener('click',function(){ if(window.ppcLogout) ppcLogout(); });
+  window.ppcOnLogin = function(){ refreshWho(); };
+
+  function renderAll(){ renderRota(); renderTeam(); renderReports(); }
+  renderAll(); refreshWho();
+})();
+</script>
+</body>
+</html>

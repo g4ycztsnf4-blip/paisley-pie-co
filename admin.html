@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Manager — Paisley Pie Co.</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --black:#000; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; --red:#a80f0f; --line:rgba(0,0,0,0.12); }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--black); line-height:1.5; }
+
+    /* TOP BAR */
+    .topbar {
+      position:sticky; top:0; z-index:50; background:#000; color:#fff;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
+      padding:0.85rem 4vw; border-bottom:3px solid #fff; flex-wrap:wrap;
+    }
+    .topbar .brand { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.05em; }
+    .topbar .brand small { display:block; font-family:'Inter',sans-serif; font-size:0.62rem; letter-spacing:0.12em; text-transform:uppercase; color:rgba(255,255,255,0.5); font-weight:700; }
+    .topbar-actions { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+    .btn { border:none; border-radius:8px; padding:0.6rem 1.1rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.74rem; letter-spacing:0.05em; text-transform:uppercase; cursor:pointer; transition:opacity 0.15s,transform 0.12s; text-decoration:none; display:inline-block; }
+    .btn:hover { opacity:0.85; } .btn:active { transform:scale(0.97); }
+    .btn-publish { background:var(--green); color:#fff; }
+    .btn-ghost { background:transparent; color:#fff; border:1.5px solid rgba(255,255,255,0.3); }
+    .btn-light { background:#fff; color:#000; }
+    .btn-danger { background:transparent; color:var(--red); border:1.5px solid rgba(168,15,15,0.4); }
+    .btn-sm { padding:0.4rem 0.75rem; font-size:0.66rem; }
+
+    .preview-dot { display:inline-flex; align-items:center; gap:0.4rem; font-size:0.68rem; font-weight:700; color:rgba(255,255,255,0.7); text-transform:uppercase; letter-spacing:0.06em; }
+    .preview-dot b { width:9px; height:9px; border-radius:50%; background:#666; }
+    .preview-dot.on b { background:#37d67a; box-shadow:0 0 0 3px rgba(55,214,122,0.25); }
+
+    /* HELP BANNER */
+    .help { background:var(--stone); border-bottom:1px solid var(--line); padding:0.85rem 4vw; font-size:0.82rem; color:#333; }
+    .help strong { color:#000; }
+
+    /* TABS */
+    .tabs { display:flex; gap:0.5rem; padding:1rem 4vw 0; flex-wrap:wrap; }
+    .tab { background:transparent; border:1.5px solid var(--line); border-bottom:none; border-radius:10px 10px 0 0; padding:0.65rem 1.25rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.78rem; letter-spacing:0.04em; text-transform:uppercase; cursor:pointer; color:var(--muted); }
+    .tab.active { background:#000; color:#fff; border-color:#000; }
+
+    .wrap { max-width:1000px; margin:0 auto; padding:1.5rem 4vw 5rem; }
+    .panel { display:none; }
+    .panel.active { display:block; }
+
+    .panel-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+    .panel-head h2 { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; letter-spacing:0.03em; }
+
+    /* CARDS / FIELDS */
+    .card { background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:1.25rem; margin-bottom:1rem; }
+    .card.cat-card { border-color:rgba(0,0,0,0.18); }
+    .cat-title { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:0.03em; margin:1.75rem 0 0.75rem; padding-bottom:0.35rem; border-bottom:2px solid #000; }
+    .cat-title:first-child { margin-top:0; }
+
+    .row { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:0.85rem; }
+    .field { display:flex; flex-direction:column; gap:0.3rem; }
+    .field.full { grid-column:1 / -1; }
+    .field label { font-size:0.66rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+    .field input, .field textarea, .field select {
+      border:1.5px solid var(--line); border-radius:8px; padding:0.6rem 0.7rem;
+      font-family:'Inter',sans-serif; font-size:0.88rem; background:var(--off); color:#000; width:100%;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus { outline:none; border-color:#000; background:#fff; }
+    .field textarea { resize:vertical; min-height:64px; }
+    .field .hint { font-size:0.66rem; color:var(--muted); }
+    .check { display:flex; align-items:center; gap:0.45rem; }
+    .check input { width:auto; }
+    .check label { text-transform:none; letter-spacing:0; font-size:0.8rem; font-weight:600; color:#000; }
+
+    .item-card { background:var(--off); border:1.5px solid var(--line); border-radius:12px; padding:1rem; margin-bottom:0.75rem; }
+    .item-card-top { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; margin-bottom:0.75rem; }
+    .item-card-top .name { font-weight:800; font-size:0.95rem; }
+    .add-bar { margin:0.5rem 0 1.5rem; }
+
+    .stamp-preview { display:flex; gap:0.35rem; margin-top:0.5rem; flex-wrap:wrap; }
+    .stamp-preview span { width:26px; height:26px; border-radius:50%; border:2px dashed var(--line); display:flex; align-items:center; justify-content:center; font-size:0.8rem; }
+    .stamp-preview span.f { background:#000; border-style:solid; border-color:#000; }
+    .stamp-preview span.free { background:var(--green); border-color:var(--green); color:#fff; font-size:0.5rem; font-weight:800; }
+
+    /* PUBLISH MODAL */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; padding:5vw; }
+    .overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:16px; max-width:520px; width:100%; padding:1.75rem; }
+    .modal h3 { font-family:'Bebas Neue',sans-serif; font-size:1.7rem; letter-spacing:0.03em; margin-bottom:0.75rem; }
+    .modal ol { margin:0.5rem 0 1.25rem 1.2rem; font-size:0.9rem; color:#333; }
+    .modal ol li { margin-bottom:0.5rem; }
+    .modal .modal-actions { display:flex; gap:0.6rem; justify-content:flex-end; flex-wrap:wrap; }
+    .toast { position:fixed; bottom:1.25rem; left:50%; transform:translateX(-50%) translateY(150%); background:#000; color:#fff; padding:0.85rem 1.5rem; border-radius:10px; font-weight:700; font-size:0.85rem; z-index:300; transition:transform 0.3s; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+
+    @media (max-width:600px){ .topbar .brand small { display:none; } }
+
+    /* WHO / ORDERS */
+    .who { color:rgba(255,255,255,0.75); font-size:0.72rem; font-weight:700; letter-spacing:0.03em; }
+    .badge-count { background:#a80f0f; color:#fff; border-radius:999px; font-size:0.6rem; font-weight:800; padding:0.05rem 0.42rem; margin-left:0.25rem; vertical-align:middle; }
+    .badge-count:empty { display:none; }
+    .orders-toolbar { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .orders-toolbar .spacer { flex:1; }
+    .orders-count { font-size:0.85rem; }
+    .order { background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1rem; }
+    .order.is-new { border-color:#a80f0f; box-shadow:0 0 0 2px rgba(168,15,15,0.08); }
+    .order-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .order-ref { font-family:'Bebas Neue',sans-serif; font-size:1.35rem; letter-spacing:0.03em; }
+    .order-mode { display:inline-block; font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; padding:0.15rem 0.5rem; border-radius:5px; background:var(--stone); margin-left:0.5rem; vertical-align:middle; }
+    .order-meta { font-size:0.74rem; color:var(--muted); }
+    .order-total { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.02em; }
+    .order-cust { font-size:0.86rem; margin:0.65rem 0; line-height:1.5; }
+    .order-cust a { color:#000; font-weight:700; }
+    .order-items { list-style:none; margin:0.4rem 0 0.2rem; font-size:0.85rem; }
+    .order-items li { display:flex; justify-content:space-between; gap:1rem; padding:0.22rem 0; border-bottom:1px dashed rgba(0,0,0,0.08); }
+    .order-actions { display:flex; gap:0.6rem; align-items:center; margin-top:0.9rem; flex-wrap:wrap; }
+    .order-actions select { border:1.5px solid var(--line); border-radius:8px; padding:0.45rem 0.6rem; font-family:'Inter',sans-serif; font-weight:700; font-size:0.78rem; background:var(--off); }
+    .order-empty { text-align:center; color:var(--muted); padding:3rem 1rem; }
+    .order-empty .big { font-size:2.5rem; display:block; margin-bottom:0.5rem; }
+
+    /* LOCK GATE */
+    .lock { position:fixed; inset:0; z-index:500; background:#000; display:flex; align-items:center; justify-content:center; padding:6vw; }
+    .lock.hidden { display:none; }
+    .lock-box { background:#111; border:1.5px solid rgba(255,255,255,0.15); border-radius:16px; padding:2.25rem; max-width:360px; width:100%; text-align:center; }
+    .lock-box .ico { font-size:2.4rem; }
+    .lock-box h1 { font-family:'Bebas Neue',sans-serif; color:#fff; font-size:2rem; letter-spacing:0.04em; margin:0.5rem 0 0.25rem; }
+    .lock-box p { color:rgba(255,255,255,0.5); font-size:0.82rem; margin-bottom:1.25rem; }
+    .lock-box input { width:100%; border:1.5px solid rgba(255,255,255,0.2); background:#000; color:#fff; border-radius:10px; padding:0.8rem 1rem; font-size:0.95rem; text-align:center; font-family:'Inter',sans-serif; }
+    .lock-box input:focus { outline:none; border-color:#fff; }
+    .lock-box button { width:100%; margin-top:0.75rem; background:var(--green); color:#fff; border:none; border-radius:10px; padding:0.85rem; font-weight:800; font-size:0.8rem; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; font-family:'Inter',sans-serif; }
+    .lock-err { color:#ff6b6b; font-size:0.78rem; margin-top:0.75rem; min-height:1em; }
+    .lock-box.shake { animation:shk 0.35s; }
+    @keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN GATE (client-side deterrent — see note in the gate script) -->
+<div class="lock" id="lock">
+  <!-- Sign in -->
+  <form class="lock-box" id="login-box">
+    <div class="ico">🔒</div>
+    <h1>STAFF LOGIN</h1>
+    <p>Sign in to manage the Paisley Pie Co. website.</p>
+    <input type="text" id="login-user" placeholder="Username (e.g. chloe.admin)" autocomplete="username" autofocus />
+    <input type="password" id="login-pw" placeholder="Password" autocomplete="current-password" style="margin-top:0.6rem" />
+    <button type="submit">Log in</button>
+    <div class="lock-err" id="login-err"></div>
+  </form>
+  <!-- Forced first-login password change -->
+  <form class="lock-box" id="change-box" style="display:none">
+    <div class="ico">🔑</div>
+    <h1>SET YOUR PASSWORD</h1>
+    <p id="change-sub">First login — please choose your own password.</p>
+    <input type="password" id="new-pw" placeholder="New password (min 6 characters)" autocomplete="new-password" />
+    <input type="password" id="new-pw2" placeholder="Confirm new password" autocomplete="new-password" style="margin-top:0.6rem" />
+    <button type="submit">Save &amp; continue</button>
+    <div class="lock-err" id="change-err"></div>
+  </form>
+</div>
+
+<script>
+/* ---------------------------------------------------------------
+   ADMIN LOGIN (multi-user)
+   ---------------------------------------------------------------
+   Users:  chloe.admin · michael.admin · scott.admin
+   First-time password for everyone:  paisleypie
+   On first login each user is forced to choose their own password.
+
+   Accounts + password changes are saved in THIS browser
+   (localStorage), so they are per-device. To reset an account back
+   to the default password, run in the console:  ppcResetUsers()
+   NOTE: this is a client-side deterrent — it hides the manager from
+   casual visitors but is NOT strong security. For real protection,
+   host the site somewhere with server-side login.
+--------------------------------------------------------------- */
+(function () {
+  // Compact, self-contained SHA-256 (works on file:// too) — geraintluff/sha256, UTF-8 safe.
+  function sha256(str) {
+    str = unescape(encodeURIComponent(str)); // to UTF-8 bytes
+    function rr(v, a){ return (v>>>a) | (v<<(32-a)); }
+    var mp = Math.pow, maxWord = mp(2,32), result = '', words = [], i, j;
+    var bitLen = str.length*8, hash = sha256.h = sha256.h || [], k = sha256.k = sha256.k || [];
+    var pc = k.length, comp = {};
+    for (var cand = 2; pc < 64; cand++) {
+      if (!comp[cand]) {
+        for (i = 0; i < 313; i += cand) comp[i] = cand;
+        hash[pc] = (mp(cand,.5)*maxWord)|0;
+        k[pc++] = (mp(cand,1/3)*maxWord)|0;
+      }
+    }
+    str += '\x80';
+    while (str.length % 64 - 56) str += '\x00';
+    for (i = 0; i < str.length; i++) {
+      j = str.charCodeAt(i);
+      if (j>>8) return '';
+      words[i>>2] |= j << ((3 - i)%4)*8;
+    }
+    words[words.length] = (bitLen/maxWord)|0;
+    words[words.length] = bitLen;
+    for (j = 0; j < words.length;) {
+      var w = words.slice(j, j += 16), oldHash = hash;
+      hash = hash.slice(0, 8);
+      for (i = 0; i < 64; i++) {
+        var w15 = w[i-15], w2 = w[i-2];
+        var a = hash[0], e = hash[4];
+        var t1 = hash[7] + (rr(e,6)^rr(e,11)^rr(e,25)) + ((e&hash[5])^((~e)&hash[6])) + k[i]
+          + (w[i] = (i < 16) ? w[i] : (w[i-16] + (rr(w15,7)^rr(w15,18)^(w15>>>3)) + w[i-7] + (rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+        var t2 = (rr(a,2)^rr(a,13)^rr(a,22)) + ((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+        hash = [(t1+t2)|0].concat(hash);
+        hash[4] = (hash[4]+t1)|0;
+      }
+      for (i = 0; i < 8; i++) hash[i] = (hash[i]+oldHash[i])|0;
+    }
+    for (i = 0; i < 8; i++)
+      for (j = 3; j+1; j--) {
+        var b = (hash[i]>>(j*8))&255;
+        result += ((b < 16) ? 0 : '') + b.toString(16);
+      }
+    return result;
+  }
+  window.ppcHashPassword = function (p) { var h = sha256(p); console.log(h); return h; };
+
+  var DEFAULT_HASH = sha256('paisleypie');
+  var USERS_KEY = 'ppc_admin_users';
+  var SESSION_KEY = 'ppc_admin_user';
+  var SEED = [
+    { username: 'chloe.admin',   name: 'Chloe',   hash: DEFAULT_HASH, mustChange: true },
+    { username: 'michael.admin', name: 'Michael', hash: DEFAULT_HASH, mustChange: true },
+    { username: 'scott.admin',   name: 'Scott',   hash: DEFAULT_HASH, mustChange: true }
+  ];
+  function loadUsers() {
+    try { var u = JSON.parse(localStorage.getItem(USERS_KEY)); if (u && u.length) return u; } catch (e) {}
+    localStorage.setItem(USERS_KEY, JSON.stringify(SEED));
+    return JSON.parse(JSON.stringify(SEED));
+  }
+  function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+  function findUser(uname) {
+    uname = (uname || '').toLowerCase().trim();
+    return loadUsers().filter(function (x) { return x.username === uname; })[0] || null;
+  }
+  window.ppcResetUsers = function () { localStorage.removeItem(USERS_KEY); console.log('Accounts reset to default password "paisleypie".'); };
+  window.ppcCurrentUser = function () { var su = sessionStorage.getItem(SESSION_KEY); return su ? findUser(su) : null; };
+  window.ppcLogout = function () { sessionStorage.removeItem(SESSION_KEY); location.reload(); };
+
+  var lock = document.getElementById('lock');
+  var loginBox = document.getElementById('login-box');
+  var changeBox = document.getElementById('change-box');
+  var pendingUser = null;
+  function shake(box) { box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake'); }
+  function grant(user) {
+    sessionStorage.setItem(SESSION_KEY, user.username);
+    lock.classList.add('hidden');
+    if (typeof window.ppcOnLogin === 'function') window.ppcOnLogin(user);
+  }
+
+  // Resume an existing session
+  (function () {
+    var su = sessionStorage.getItem(SESSION_KEY);
+    if (su) { var u = findUser(su); if (u && !u.mustChange) grant(u); }
+  })();
+
+  loginBox.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var u = findUser(document.getElementById('login-user').value);
+    var pw = document.getElementById('login-pw').value;
+    if (!u || sha256(pw) !== u.hash) {
+      document.getElementById('login-err').textContent = 'Wrong username or password.';
+      shake(loginBox); document.getElementById('login-pw').value = ''; return;
+    }
+    document.getElementById('login-err').textContent = '';
+    if (u.mustChange) {
+      pendingUser = u;
+      document.getElementById('change-sub').textContent = 'Hi ' + u.name + " — it's your first login. Please choose your own password.";
+      loginBox.style.display = 'none';
+      changeBox.style.display = '';
+      document.getElementById('new-pw').focus();
+      return;
+    }
+    grant(u);
+  });
+
+  changeBox.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var p1 = document.getElementById('new-pw').value;
+    var p2 = document.getElementById('new-pw2').value;
+    var err = document.getElementById('change-err');
+    if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters.'; shake(changeBox); return; }
+    if (p1 !== p2) { err.textContent = 'Passwords do not match.'; shake(changeBox); return; }
+    if (sha256(p1) === DEFAULT_HASH) { err.textContent = 'Please pick something other than the default password.'; shake(changeBox); return; }
+    var users = loadUsers();
+    for (var i = 0; i < users.length; i++) {
+      if (users[i].username === pendingUser.username) { users[i].hash = sha256(p1); users[i].mustChange = false; pendingUser = users[i]; }
+    }
+    saveUsers(users);
+    grant(pendingUser);
+  });
+})();
+</script>
+
+<div class="topbar">
+  <div class="brand">PAISLEY PIE CO.<small>Content Manager</small></div>
+  <div class="topbar-actions">
+    <span class="who" id="who"></span>
+    <span class="preview-dot" id="preview-dot"><b></b><span id="preview-label">Saved</span></span>
+    <a href="index.html" target="_blank" class="btn btn-ghost btn-sm">View site ↗</a>
+    <a href="manager.html" class="btn btn-ghost btn-sm">Manager portal →</a>
+    <button class="btn btn-danger btn-sm" id="discard-btn">Discard changes</button>
+    <button class="btn btn-publish" id="publish-btn">⬇ Publish</button>
+    <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+  </div>
+</div>
+
+<div class="help">
+  ✏️ Edit anything below — changes preview <strong>instantly on this device</strong> (open “View site”). When you're happy, press <strong>Publish</strong> to download an updated <code>data.js</code> and drop it into the site folder to go live for everyone.
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="orders">📋 Orders<span class="badge-count" id="orders-badge"></span></button>
+  <button class="tab" data-tab="menu">🥧 Menu &amp; Prices</button>
+  <button class="tab" data-tab="deals">🏷️ Deals</button>
+  <button class="tab" data-tab="news">📰 News</button>
+  <button class="tab" data-tab="info">🏪 Shop Info</button>
+  <button class="tab" data-tab="activity">📜 Activity</button>
+</div>
+
+<div class="wrap">
+  <div class="panel active" id="panel-orders"></div>
+  <div class="panel" id="panel-menu"></div>
+  <div class="panel" id="panel-deals"></div>
+  <div class="panel" id="panel-news"></div>
+  <div class="panel" id="panel-info"></div>
+  <div class="panel" id="panel-activity"></div>
+</div>
+
+<!-- PUBLISH MODAL -->
+<div class="overlay" id="publish-modal">
+  <div class="modal">
+    <h3>Publish your changes</h3>
+    <p style="font-size:0.9rem;color:#444">A file called <code>data.js</code> has just downloaded. To make your changes live for everyone:</p>
+    <ol>
+      <li>Find the downloaded <strong>data.js</strong> (usually your Downloads folder).</li>
+      <li>Move it into your website folder <strong>paisley-pie-co</strong>, replacing the old <code>data.js</code>.</li>
+      <li>Done! Refresh the website to see it live.</li>
+    </ol>
+    <div class="modal-actions">
+      <button class="btn btn-light" id="redownload-btn">Download again</button>
+      <button class="btn btn-publish" id="modal-close">Got it</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script src="orders.js"></script>
+<script src="audit.js"></script>
+<script>
+  // ---------- state ----------
+  var DRAFT_KEY = 'ppc_admin_draft';
+  var published = JSON.parse(JSON.stringify(window.PPC_DATA)); // pristine copy of the file
+  var draft;
+  try { draft = JSON.parse(localStorage.getItem(DRAFT_KEY)) || JSON.parse(JSON.stringify(published)); }
+  catch (e) { draft = JSON.parse(JSON.stringify(published)); }
+
+  function save() { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); markDirty(); }
+  function markDirty() {
+    var dirty = JSON.stringify(draft) !== JSON.stringify(published);
+    var dot = document.getElementById('preview-dot');
+    dot.classList.toggle('on', dirty);
+    document.getElementById('preview-label').textContent = dirty ? 'Unpublished changes' : 'Matches live site';
+  }
+  function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove('show'); }, 2200); }
+
+  // ---------- tiny DOM helpers ----------
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function field(labelText, value, onInput, opts) {
+    opts = opts || {};
+    var f = el('div', 'field' + (opts.full ? ' full' : ''));
+    f.appendChild(el('label', null, labelText));
+    var input;
+    if (opts.type === 'textarea') { input = el('textarea'); input.value = value == null ? '' : value; }
+    else if (opts.type === 'select') {
+      input = el('select');
+      (opts.options || []).forEach(function(o){ var op = el('option', null, o.label); op.value = o.value; if (o.value === value) op.selected = true; input.appendChild(op); });
+    } else { input = el('input'); input.type = opts.type || 'text'; if (opts.step) input.step = opts.step; input.value = value == null ? '' : value; }
+    input.addEventListener('input', function(){ onInput(opts.type === 'number' ? (input.value === '' ? 0 : parseFloat(input.value)) : input.value); });
+    f.appendChild(input);
+    if (opts.hint) f.appendChild(el('div', 'hint', opts.hint));
+    return f;
+  }
+  function checkbox(labelText, checked, onChange) {
+    var f = el('div', 'check');
+    var input = el('input'); input.type = 'checkbox'; input.checked = !!checked;
+    var id = 'cb' + Math.random().toString(36).slice(2);
+    input.id = id;
+    input.addEventListener('change', function(){ onChange(input.checked); });
+    var lab = el('label', null, labelText); lab.setAttribute('for', id);
+    f.appendChild(input); f.appendChild(lab);
+    return f;
+  }
+  function rowDiv() { return el('div', 'row'); }
+
+  // ============================================================
+  //  MENU TAB
+  // ============================================================
+  function renderMenu() {
+    var panel = document.getElementById('panel-menu'); panel.innerHTML = '';
+    var head = el('div', 'panel-head');
+    head.appendChild(el('h2', null, 'Menu &amp; Prices'));
+    panel.appendChild(head);
+
+    var catOptions = draft.menuCategories.map(function(c){ return { value: c.key, label: c.title }; });
+
+    draft.menuCategories.forEach(function(cat) {
+      panel.appendChild(el('div', 'cat-title', cat.title));
+      draft.menu.filter(function(it){ return it.cat === cat.key; }).forEach(function(it){
+        panel.appendChild(itemCard(it, catOptions));
+      });
+      var add = el('div', 'add-bar');
+      var btn = el('button', 'btn btn-light btn-sm', '+ Add item to ' + cat.title);
+      btn.addEventListener('click', function(){
+        var nid = 'item-' + Date.now();
+        draft.menu.push({ id:nid, cat:cat.key, name:'New item', price:0, desc:'', badge:'', badgeText:'', home:false, homeTag:'', homeTagDark:true, img:'' });
+        if (window.ppcAudit) ppcAudit.log('Added a menu item', 'in ' + cat.title);
+        save(); renderMenu();
+      });
+      add.appendChild(btn);
+      panel.appendChild(add);
+    });
+  }
+
+  function itemCard(it, catOptions) {
+    var card = el('div', 'item-card');
+    var top = el('div', 'item-card-top');
+    top.appendChild(el('div', 'name', '🥧 ' + (it.name || 'Item')));
+    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+    del.addEventListener('click', function(){
+      if (!confirm('Delete "' + it.name + '"?')) return;
+      draft.menu = draft.menu.filter(function(x){ return x !== it; });
+      if (window.ppcAudit) ppcAudit.log('Deleted menu item', it.name);
+      save(); renderMenu();
+    });
+    top.appendChild(del);
+    card.appendChild(top);
+
+    var r1 = rowDiv();
+    r1.appendChild(field('Name', it.name, function(v){ it.name = v; save(); top.querySelector('.name').textContent = '🥧 ' + v; }));
+    r1.appendChild(field('Price (£)', it.price, function(v){ it.price = v; save(); }, { type:'number', step:'0.10' }));
+    r1.appendChild(field('Category', it.cat, function(v){ it.cat = v; save(); renderMenu(); }, { type:'select', options:catOptions }));
+    card.appendChild(r1);
+
+    var r2 = rowDiv();
+    r2.appendChild(field('Description', it.desc, function(v){ it.desc = v; save(); }, { type:'textarea', full:true }));
+    card.appendChild(r2);
+
+    var r3 = rowDiv();
+    r3.appendChild(field('Label type', it.badge, function(v){ it.badge = v; save(); }, { type:'select', options:[
+      { value:'', label:'Normal (black)' }, { value:'v', label:'Veg (green)' }, { value:'hot', label:'Hot/Viral (red)' }
+    ]}));
+    r3.appendChild(field('Label text', it.badgeText, function(v){ it.badgeText = v; save(); }, { hint:'e.g. Fan Fave, Veg, 🔥 Viral — leave blank for none' }));
+    card.appendChild(r3);
+
+    var homeWrap = el('div', 'row');
+    var homeCheck = el('div', 'field full');
+    homeCheck.appendChild(checkbox('Feature this on the homepage', it.home, function(c){ it.home = c; save(); }));
+    homeWrap.appendChild(homeCheck);
+    homeWrap.appendChild(field('Homepage image URL', it.img, function(v){ it.img = v; save(); }, { full:true, hint:'Link to a photo for the homepage card (optional). New items show a 🥧 if blank.' }));
+    homeWrap.appendChild(field('Homepage tag', it.homeTag, function(v){ it.homeTag = v; save(); }, { hint:'Small label on the homepage card, e.g. Fan Favourite' }));
+    card.appendChild(homeWrap);
+
+    return card;
+  }
+
+  // ============================================================
+  //  DEALS TAB
+  // ============================================================
+  function renderDeals() {
+    var panel = document.getElementById('panel-deals'); panel.innerHTML = '';
+    panel.appendChild(el('div', 'panel-head', '<h2>Deals</h2>'));
+    var d = draft.deals;
+
+    // Featured
+    panel.appendChild(el('div', 'cat-title', 'Deal of the Week (big banner)'));
+    var fc = el('div', 'card');
+    var f = d.featured;
+    var fr1 = rowDiv();
+    fr1.appendChild(field('Top tag', f.tag, function(v){ f.tag = v; save(); }));
+    fr1.appendChild(field('Title', f.title, function(v){ f.title = v; save(); }));
+    fc.appendChild(fr1);
+    fc.appendChild(rowAppend(field('Description', f.desc, function(v){ f.desc = v; save(); }, { type:'textarea', full:true })));
+    var fr2 = rowDiv();
+    fr2.appendChild(field('Was (old price)', f.was, function(v){ f.was = v; save(); }, { hint:'e.g. £7.80' }));
+    fr2.appendChild(field('Now (new price)', f.now, function(v){ f.now = v; save(); }, { hint:'e.g. £5.95' }));
+    fr2.appendChild(field('Unit label', f.unit, function(v){ f.unit = v; save(); }, { hint:'e.g. Per Deal' }));
+    fc.appendChild(fr2);
+    panel.appendChild(fc);
+
+    // Deal cards
+    panel.appendChild(el('div', 'cat-title', 'Deal cards'));
+    d.list.forEach(function(x, i){ panel.appendChild(dealCard(x, i)); });
+    var add = el('div', 'add-bar');
+    var addBtn = el('button', 'btn btn-light btn-sm', '+ Add a deal');
+    addBtn.addEventListener('click', function(){
+      d.list.push({ ribbon:'', emoji:'🥧', title:'NEW DEAL', price:'£0.00', was:'', desc:'', bullets:[], ctaLabel:'Order This →', ctaHref:'order.html' });
+      if (window.ppcAudit) ppcAudit.log('Added a deal');
+      save(); renderDeals();
+    });
+    add.appendChild(addBtn); panel.appendChild(add);
+
+    // Loyalty
+    panel.appendChild(el('div', 'cat-title', 'Loyalty card'));
+    var lc = el('div', 'card'); var loy = d.loyalty;
+    var lr1 = rowDiv();
+    lr1.appendChild(field('Card title', loy.cardTitle, function(v){ loy.cardTitle = v; save(); }));
+    lr1.appendChild(field('Stamps to fill', loy.total, function(v){ loy.total = v; save(); renderDeals(); }, { type:'number', step:'1' }));
+    lr1.appendChild(field('Stamps shown filled', loy.filled, function(v){ loy.filled = v; save(); renderDeals(); }, { type:'number', step:'1' }));
+    lc.appendChild(lr1);
+    lc.appendChild(rowAppend(field('Heading', loy.heading, function(v){ loy.heading = v; save(); })));
+    lc.appendChild(rowAppend(field('Text', loy.text, function(v){ loy.text = v; save(); }, { type:'textarea', full:true })));
+    var sp = el('div', 'stamp-preview');
+    for (var i = 0; i < (loy.total||0); i++) {
+      if (i === loy.total - 1) sp.appendChild(el('span', 'free', 'FREE'));
+      else sp.appendChild(el('span', i < loy.filled ? 'f' : '', '🥧'));
+    }
+    lc.appendChild(sp);
+    panel.appendChild(lc);
+
+    // Fine print
+    panel.appendChild(el('div', 'cat-title', 'Small print'));
+    var fp = el('div', 'card');
+    fp.appendChild(field('Fine print', d.finePrint, function(v){ d.finePrint = v; save(); }, { type:'textarea', full:true }));
+    panel.appendChild(fp);
+  }
+  function rowAppend(node) { var r = rowDiv(); r.appendChild(node); return r; }
+
+  function dealCard(x, i) {
+    var card = el('div', 'card');
+    var top = el('div', 'item-card-top');
+    top.appendChild(el('div', 'name', (x.emoji||'') + ' ' + (x.title||'Deal')));
+    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+    del.addEventListener('click', function(){ if (!confirm('Delete this deal?')) return; if (window.ppcAudit) ppcAudit.log('Deleted a deal', x.title); draft.deals.list.splice(i,1); save(); renderDeals(); });
+    top.appendChild(del); card.appendChild(top);
+
+    var r1 = rowDiv();
+    r1.appendChild(field('Emoji', x.emoji, function(v){ x.emoji = v; save(); top.querySelector('.name').textContent = v + ' ' + x.title; }));
+    r1.appendChild(field('Title', x.title, function(v){ x.title = v; save(); top.querySelector('.name').textContent = (x.emoji||'') + ' ' + v; }));
+    r1.appendChild(field('Ribbon', x.ribbon, function(v){ x.ribbon = v; save(); }, { hint:'corner tag, e.g. Best Value' }));
+    card.appendChild(r1);
+
+    var r2 = rowDiv();
+    r2.appendChild(field('Price', x.price, function(v){ x.price = v; save(); }, { hint:'e.g. £5.50 or 10%' }));
+    r2.appendChild(field('Was / sub-label', x.was, function(v){ x.was = v; save(); }, { hint:'e.g. was £6.30' }));
+    card.appendChild(r2);
+
+    card.appendChild(rowAppend(field('Description', x.desc, function(v){ x.desc = v; save(); }, { type:'textarea', full:true })));
+    card.appendChild(rowAppend(field('Bullet points (one per line)', (x.bullets||[]).join('\n'), function(v){ x.bullets = v.split('\n').map(function(s){return s.trim();}).filter(Boolean); save(); }, { type:'textarea', full:true })));
+
+    var r3 = rowDiv();
+    r3.appendChild(field('Button text', x.ctaLabel, function(v){ x.ctaLabel = v; save(); }));
+    r3.appendChild(field('Button link', x.ctaHref, function(v){ x.ctaHref = v; save(); }, { type:'select', options:[
+      { value:'order.html', label:'Order page' }, { value:'menu.html', label:'Menu page' }
+    ]}));
+    card.appendChild(r3);
+    return card;
+  }
+
+  // ============================================================
+  //  NEWS TAB
+  // ============================================================
+  function renderNews() {
+    var panel = document.getElementById('panel-news'); panel.innerHTML = '';
+    panel.appendChild(el('div', 'panel-head', '<h2>News</h2>'));
+    var n = draft.news;
+
+    panel.appendChild(el('div', 'cat-title', 'Headline story (big card)'));
+    var lc = el('div', 'card'); var l = n.lead;
+    var lr1 = rowDiv();
+    lr1.appendChild(field('Tag', l.tag, function(v){ l.tag = v; save(); }));
+    lr1.appendChild(field('Date', l.date, function(v){ l.date = v; save(); }, { hint:'e.g. May 2026' }));
+    lc.appendChild(lr1);
+    lc.appendChild(rowAppend(field('Title', l.title, function(v){ l.title = v; save(); })));
+    lc.appendChild(rowAppend(field('Body', l.body, function(v){ l.body = v; save(); }, { type:'textarea', full:true })));
+    var lr2 = rowDiv();
+    lr2.appendChild(field('Image (file or URL)', l.img, function(v){ l.img = v; save(); }, { hint:'e.g. storefront.jpg' }));
+    lr2.appendChild(field('Button text', l.ctaLabel, function(v){ l.ctaLabel = v; save(); }));
+    lc.appendChild(lr2);
+    panel.appendChild(lc);
+
+    panel.appendChild(el('div', 'cat-title', 'News posts'));
+    n.posts.forEach(function(p, i){ panel.appendChild(postCard(p, i)); });
+    var add = el('div', 'add-bar');
+    var addBtn = el('button', 'btn btn-light btn-sm', '+ Add a news post');
+    addBtn.addEventListener('click', function(){
+      n.posts.unshift({ src:'Shop News', date:'', title:'NEW UPDATE', body:'', by:'Paisley Pie Co.' });
+      if (window.ppcAudit) ppcAudit.log('Added a news post');
+      save(); renderNews();
+    });
+    add.appendChild(addBtn); panel.appendChild(add);
+  }
+
+  function postCard(p, i) {
+    var card = el('div', 'card');
+    var top = el('div', 'item-card-top');
+    top.appendChild(el('div', 'name', '📰 ' + (p.title||'Post')));
+    var ctrls = el('div');
+    var up = el('button', 'btn btn-ghost btn-sm', '↑'); up.style.color = '#000'; up.style.borderColor = 'var(--line)'; up.style.marginRight = '0.3rem';
+    up.addEventListener('click', function(){ if (i===0) return; var a = draft.news.posts; var t = a[i-1]; a[i-1]=a[i]; a[i]=t; save(); renderNews(); });
+    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+    del.addEventListener('click', function(){ if (!confirm('Delete this post?')) return; if (window.ppcAudit) ppcAudit.log('Deleted a news post', p.title); draft.news.posts.splice(i,1); save(); renderNews(); });
+    ctrls.appendChild(up); ctrls.appendChild(del);
+    top.appendChild(ctrls); card.appendChild(top);
+
+    var r1 = rowDiv();
+    r1.appendChild(field('Source / chip', p.src, function(v){ p.src = v; save(); }, { hint:'e.g. 📺 BBC News' }));
+    r1.appendChild(field('Date', p.date, function(v){ p.date = v; save(); }));
+    r1.appendChild(field('By-line', p.by, function(v){ p.by = v; save(); }));
+    card.appendChild(r1);
+    card.appendChild(rowAppend(field('Title', p.title, function(v){ p.title = v; save(); top.querySelector('.name').textContent = '📰 ' + v; })));
+    card.appendChild(rowAppend(field('Body', p.body, function(v){ p.body = v; save(); }, { type:'textarea', full:true })));
+    return card;
+  }
+
+  // ============================================================
+  //  SHOP INFO TAB
+  // ============================================================
+  function renderInfo() {
+    var panel = document.getElementById('panel-info'); panel.innerHTML = '';
+    panel.appendChild(el('div', 'panel-head', '<h2>Shop Info</h2>'));
+    var info = draft.info;
+
+    var c = el('div', 'card');
+    var r1 = rowDiv();
+    r1.appendChild(field('Full address', info.addressLine, function(v){ info.addressLine = v; save(); }, { full:true }));
+    c.appendChild(r1);
+    var r2 = rowDiv();
+    r2.appendChild(field('Phone (shown)', info.phone, function(v){ info.phone = v; save(); }));
+    r2.appendChild(field('Phone (dial)', info.phoneHref, function(v){ info.phoneHref = v; save(); }, { hint:'digits only, e.g. 01418898480' }));
+    c.appendChild(r2);
+    var r3 = rowDiv();
+    r3.appendChild(field('Instagram handle', info.instagram, function(v){ info.instagram = v; save(); }));
+    r3.appendChild(field('Instagram URL', info.instagramUrl, function(v){ info.instagramUrl = v; save(); }));
+    c.appendChild(r3);
+    var r4 = rowDiv();
+    r4.appendChild(field('Price range', info.priceRange, function(v){ info.priceRange = v; save(); }));
+    r4.appendChild(field('Map search', info.mapQuery, function(v){ info.mapQuery = v; save(); }, { hint:'used for the map + directions' }));
+    r4.appendChild(field('Delivery fee (£)', info.deliveryFee, function(v){ info.deliveryFee = v; save(); }, { type:'number', step:'0.10' }));
+    c.appendChild(r4);
+    panel.appendChild(c);
+
+    panel.appendChild(el('div', 'cat-title', 'Opening hours'));
+    var hc = el('div', 'card');
+    info.hours.forEach(function(h){
+      var r = rowDiv();
+      r.appendChild(field('Day', h.day, function(v){ h.day = v; save(); }));
+      r.appendChild(field('Hours', h.time, function(v){ h.time = v; save(); }, { hint:'e.g. 8:00 am – 5:00 pm, or Closed' }));
+      hc.appendChild(r);
+    });
+    panel.appendChild(hc);
+
+    // ----- Ordering on/off (busy switch) -----
+    if (!draft.siteStatus) draft.siteStatus = { ordersOpen: true, busyTitle: "WE'RE SLAMMED RIGHT NOW", busyMessage: '' };
+    var st = draft.siteStatus;
+    panel.appendChild(el('div', 'cat-title', 'Online ordering switch'));
+    var oc = el('div', 'card');
+    var statusLine = el('div'); statusLine.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem';
+    var statusLabel = el('div');
+    function refreshStatusLabel() {
+      statusLabel.innerHTML = st.ordersOpen
+        ? '<strong style="color:#1f7a3d">● Ordering is ON</strong> — customers can place orders.'
+        : '<strong style="color:#a80f0f">● Ordering is OFF</strong> — customers see the “we’re busy” screen.';
+      statusLabel.style.fontSize = '0.9rem';
+    }
+    refreshStatusLabel();
+    var toggle = el('button', 'btn ' + (st.ordersOpen ? 'btn-danger' : 'btn-publish'), st.ordersOpen ? 'Pause ordering' : 'Resume ordering');
+    toggle.addEventListener('click', function(){
+      st.ordersOpen = !st.ordersOpen;
+      save();
+      if (window.ppcAudit) ppcAudit.log(st.ordersOpen ? 'Turned online ordering ON' : 'Turned online ordering OFF');
+      renderInfo();
+    });
+    statusLine.appendChild(statusLabel); statusLine.appendChild(toggle);
+    oc.appendChild(statusLine);
+    oc.appendChild(rowAppend(field('Busy screen heading', st.busyTitle, function(v){ st.busyTitle = v; save(); })));
+    oc.appendChild(rowAppend(field('Busy screen message', st.busyMessage, function(v){ st.busyMessage = v; save(); }, { type:'textarea', full:true })));
+    oc.appendChild(el('div', 'hint', 'Remember to press Publish to make the switch live for customers on other devices.')).style.cssText = 'font-size:0.72rem;color:var(--muted);margin-top:0.5rem';
+    panel.appendChild(oc);
+
+    // ----- Waitlist (people who asked to be notified) -----
+    var wl = [];
+    try { wl = JSON.parse(localStorage.getItem('ppc_waitlist') || '[]'); } catch (e) {}
+    panel.appendChild(el('div', 'cat-title', 'Notify list (' + wl.length + ')'));
+    var wc = el('div', 'card');
+    if (!wl.length) {
+      wc.appendChild(el('div', null, 'No one waiting right now. Emails collected on the “we’re busy” screen show here.')).style.cssText = 'color:var(--muted);font-size:0.88rem';
+    } else {
+      var list = el('div'); list.style.cssText = 'font-size:0.86rem;line-height:1.9';
+      wl.slice().reverse().forEach(function(w){ list.appendChild(el('div', null, esc(w.email) + ' <span style="color:var(--muted)">· ' + fmtTime(w.ts) + '</span>')); });
+      wc.appendChild(list);
+      var btns = el('div'); btns.style.cssText = 'display:flex;gap:0.6rem;margin-top:1rem;flex-wrap:wrap';
+      var copy = el('button', 'btn btn-light btn-sm', 'Copy all emails');
+      copy.addEventListener('click', function(){
+        var txt = wl.map(function(w){ return w.email; }).join(', ');
+        navigator.clipboard && navigator.clipboard.writeText(txt);
+        toast('Emails copied');
+      });
+      var clr = el('button', 'btn btn-danger btn-sm', 'Clear list');
+      clr.addEventListener('click', function(){ if (!confirm('Clear the notify list?')) return; localStorage.removeItem('ppc_waitlist'); renderInfo(); });
+      btns.appendChild(copy); btns.appendChild(clr);
+      wc.appendChild(btns);
+    }
+    panel.appendChild(wc);
+  }
+
+  // ============================================================
+  //  ACTIVITY (change log)
+  // ============================================================
+  function renderActivity() {
+    var panel = document.getElementById('panel-activity'); panel.innerHTML = '';
+    panel.appendChild(el('div', 'panel-head', '<h2>Activity</h2>'));
+    var entries = window.ppcAudit ? ppcAudit.list() : [];
+    var bar = el('div', 'orders-toolbar');
+    bar.appendChild(el('div', 'orders-count', '<strong>' + entries.length + '</strong> changes logged'));
+    bar.appendChild(el('div', 'spacer'));
+    var clr = el('button', 'btn btn-light btn-sm', 'Clear log');
+    clr.addEventListener('click', function(){ if (!confirm('Clear the whole activity log?')) return; ppcAudit.clear(); renderActivity(); });
+    bar.appendChild(clr);
+    panel.appendChild(bar);
+
+    if (!entries.length) { panel.appendChild(el('div', 'order-empty', '<span class="big">📜</span>No changes logged yet.')); return; }
+    var card = el('div', 'card');
+    entries.forEach(function(en){
+      var row = el('div'); row.style.cssText = 'display:flex;gap:0.75rem;align-items:baseline;padding:0.55rem 0;border-bottom:1px solid var(--line);font-size:0.86rem';
+      row.innerHTML = '<span style="font-weight:800;min-width:78px">' + esc(en.who) + '</span>' +
+                      '<span style="flex:1">' + esc(en.action) + (en.detail ? ' <span style="color:var(--muted)">— ' + esc(en.detail) + '</span>' : '') + '</span>' +
+                      '<span style="color:var(--muted);white-space:nowrap;font-size:0.76rem">' + fmtTime(en.ts) + '</span>';
+      card.appendChild(row);
+    });
+    panel.appendChild(card);
+  }
+
+  // ---------- tabs ----------
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); });
+      document.querySelectorAll('.panel').forEach(function(x){ x.classList.remove('active'); });
+      t.classList.add('active');
+      document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- publish / discard ----------
+  function buildDataFile() {
+    var header = '/* ============================================================\n' +
+      '   PAISLEY PIE CO. — SITE CONTENT (generated by admin.html)\n' +
+      '   Replace this file in your website folder to publish changes.\n' +
+      '   ============================================================ */\n';
+    var body = 'window.PPC_DATA = ' + JSON.stringify(draft, null, 2) + ';\n';
+    var helper = '\n(function () {\n' +
+      '  window.ppcData = function () {\n' +
+      '    try { var draft = localStorage.getItem(\'ppc_admin_draft\'); if (draft) return JSON.parse(draft); } catch (e) {}\n' +
+      '    return window.PPC_DATA;\n' +
+      '  };\n' +
+      '  window.ppcMoney = function (n) { return \'£\' + Number(n).toFixed(2); };\n' +
+      '})();\n';
+    return header + body + helper;
+  }
+  function downloadDataFile() {
+    var blob = new Blob([buildDataFile()], { type: 'text/javascript' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'data.js';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  document.getElementById('publish-btn').addEventListener('click', function(){
+    downloadDataFile();
+    if (window.ppcAudit) ppcAudit.log('Published the website (data.js downloaded)');
+    document.getElementById('publish-modal').classList.add('open');
+    renderActivity();
+  });
+  document.getElementById('redownload-btn').addEventListener('click', downloadDataFile);
+  document.getElementById('modal-close').addEventListener('click', function(){
+    document.getElementById('publish-modal').classList.remove('open');
+    published = JSON.parse(JSON.stringify(draft)); // now treat current as the published baseline
+    markDirty();
+  });
+  document.getElementById('publish-modal').addEventListener('click', function(e){ if (e.target.id === 'publish-modal') e.target.classList.remove('open'); });
+
+  document.getElementById('discard-btn').addEventListener('click', function(){
+    if (!confirm('Discard all unpublished changes and reload the published content?')) return;
+    localStorage.removeItem(DRAFT_KEY);
+    draft = JSON.parse(JSON.stringify(published));
+    renderAll(); markDirty(); toast('Changes discarded');
+  });
+
+  // ============================================================
+  //  ORDERS TAB
+  // ============================================================
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]); }); }
+  function fmtTime(ts){ try { return new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); } catch(e){ return ''; } }
+
+  function updateOrdersBadge() {
+    var b = document.getElementById('orders-badge');
+    var n = (window.ppcOrders ? ppcOrders.countNew() : 0);
+    if (b) b.textContent = n ? n : '';
+  }
+
+  function renderOrders() {
+    var panel = document.getElementById('panel-orders'); panel.innerHTML = '';
+    panel.appendChild(el('div', 'panel-head', '<h2>Orders</h2>'));
+
+    var orders = window.ppcOrders ? ppcOrders.list() : [];
+    var bar = el('div', 'orders-toolbar');
+    bar.appendChild(el('div', 'orders-count', '<strong>' + orders.length + '</strong> total &middot; <strong style="color:#a80f0f">' + (window.ppcOrders ? ppcOrders.countNew() : 0) + '</strong> new'));
+    bar.appendChild(el('div', 'spacer'));
+    var refresh = el('button', 'btn btn-light btn-sm', '↻ Refresh');
+    refresh.addEventListener('click', function(){ renderOrders(); updateOrdersBadge(); });
+    var clr = el('button', 'btn btn-light btn-sm', 'Clear completed');
+    clr.addEventListener('click', function(){
+      if (!confirm('Remove all completed orders?')) return;
+      ppcOrders.list().forEach(function(o){ if ((o.status||'New') === 'Completed') ppcOrders.remove(o.ref); });
+      renderOrders(); updateOrdersBadge();
+    });
+    bar.appendChild(refresh); bar.appendChild(clr);
+    panel.appendChild(bar);
+
+    if (!orders.length) {
+      panel.appendChild(el('div', 'order-empty', '<span class="big">🧾</span>No orders yet.<br>Orders placed on this device will appear here.'));
+      return;
+    }
+    orders.forEach(function(o){ panel.appendChild(orderCard(o)); });
+  }
+
+  function orderCard(o) {
+    var status = o.status || 'New';
+    var card = el('div', 'order' + (status === 'New' ? ' is-new' : ''));
+    var top = el('div', 'order-top');
+    var left = el('div');
+    left.appendChild(el('div', 'order-ref', esc(o.ref) + '<span class="order-mode">' + (o.mode === 'delivery' ? 'Delivery' : 'Collection') + '</span>'));
+    left.appendChild(el('div', 'order-meta', fmtTime(o.ts)));
+    top.appendChild(left);
+    top.appendChild(el('div', 'order-total', ppcMoney(o.total)));
+    card.appendChild(top);
+
+    var c = o.customer || {};
+    card.appendChild(el('div', 'order-cust',
+      '<b>' + esc(c.name) + '</b> &middot; <a href="tel:' + esc(c.phone) + '">' + esc(c.phone) + '</a>' +
+      (c.address ? '<br>📍 ' + esc(c.address) : '') +
+      (c.notes ? '<br>📝 ' + esc(c.notes) : '')
+    ));
+
+    var ul = el('ul', 'order-items');
+    (o.items || []).forEach(function(it){
+      ul.appendChild(el('li', null, '<span>' + it.qty + '× ' + esc(it.name) + '</span><span>' + ppcMoney(it.line) + '</span>'));
+    });
+    card.appendChild(ul);
+    if (o.fee) { var fl = el('div', 'order-meta'); fl.style.textAlign = 'right'; fl.textContent = 'incl. ' + ppcMoney(o.fee) + ' delivery'; card.appendChild(fl); }
+
+    var act = el('div', 'order-actions');
+    act.appendChild(el('span', null, 'Status:'));
+    var sel = el('select');
+    ppcOrders.STATUSES.forEach(function(s){ var op = el('option', null, s); op.value = s; if (s === status) op.selected = true; sel.appendChild(op); });
+    sel.addEventListener('change', function(){ ppcOrders.setStatus(o.ref, sel.value); if (window.ppcAudit) ppcAudit.log('Updated order ' + o.ref, '→ ' + sel.value); renderOrders(); updateOrdersBadge(); });
+    act.appendChild(sel);
+    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+    del.addEventListener('click', function(){ if (!confirm('Delete order ' + o.ref + '?')) return; ppcOrders.remove(o.ref); renderOrders(); updateOrdersBadge(); });
+    act.appendChild(del);
+    card.appendChild(act);
+    return card;
+  }
+
+  // ---------- logged-in user + logout ----------
+  function refreshWho() {
+    var u = (typeof window.ppcCurrentUser === 'function') ? ppcCurrentUser() : null;
+    document.getElementById('who').textContent = u ? ('👤 ' + u.name) : '';
+  }
+  document.getElementById('logout-btn').addEventListener('click', function(){ if (window.ppcLogout) ppcLogout(); });
+  // called by the login gate when someone signs in
+  window.ppcOnLogin = function(){ refreshWho(); renderOrders(); updateOrdersBadge(); };
+
+  function renderAll() { renderOrders(); renderMenu(); renderDeals(); renderNews(); renderInfo(); renderActivity(); }
+  renderAll();
+  refreshWho();
+  updateOrdersBadge();
+  markDirty();
+</script>
+</body>
+</html>
