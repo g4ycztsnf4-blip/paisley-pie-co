@@ -299,6 +299,8 @@
   <a href="index.html">← Back to Paisley Pie Co.</a> <span style="opacity:0.4">·</span> <a href="admin.html">Manage</a>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <script src="data.js"></script>
 <script src="orders.js"></script>
 <script>
@@ -454,7 +456,18 @@
       customer: { name: name, phone: phone, address: mode === 'delivery' ? addr : '', notes: notes },
       items: lines, subtotal: +t.sub.toFixed(2), fee: +t.fee.toFixed(2), total: +t.grand.toFixed(2)
     };
-    if (window.ppcOrders) ppcOrders.add(order);
+    if (window.ppcOrders) ppcOrders.add(order); // local copy (this device)
+    // Cloud: send the order to the shop (write-only; safe if not configured)
+    try {
+      var sb = window.ppcCloud && window.ppcCloud();
+      if (sb) {
+        sb.from('orders').insert({
+          ref: order.ref, mode: order.mode, customer: order.customer,
+          items: order.items, subtotal: order.subtotal, fee: order.fee,
+          total: order.total, status: 'New'
+        }).then(function (res) { if (res && res.error) console.warn('Cloud order failed:', res.error.message); });
+      }
+    } catch (e) { console.warn('Cloud order error', e); }
 
     document.getElementById('order-ref').textContent = ref;
     document.getElementById('modal-mode-line').textContent = mode === 'delivery'
@@ -509,6 +522,10 @@
       w.push({ email: email, ts: Date.now() });
       localStorage.setItem('ppc_waitlist', JSON.stringify(w));
     } catch (err) {}
+    try {
+      var sb = window.ppcCloud && window.ppcCloud();
+      if (sb) sb.from('waitlist').insert({ email: email }).then(function (res) { if (res && res.error) console.warn('Cloud waitlist failed:', res.error.message); });
+    } catch (e) {}
     this.style.display = 'none';
     document.getElementById('waitlist-ok').style.display = 'block';
   });
