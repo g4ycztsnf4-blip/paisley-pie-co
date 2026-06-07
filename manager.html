@@ -82,6 +82,26 @@
     .empty { text-align:center; color:var(--muted); padding:3rem 1rem; }
     .empty .big { font-size:2.5rem; display:block; margin-bottom:0.5rem; }
 
+    /* orders */
+    .badge-count { background:#a80f0f; color:#fff; border-radius:999px; font-size:0.6rem; font-weight:800; padding:0.05rem 0.42rem; margin-left:0.25rem; vertical-align:middle; }
+    .badge-count:empty { display:none; }
+    .orders-toolbar { display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .orders-toolbar .spacer { flex:1; }
+    .orders-count { font-size:0.85rem; }
+    .order { background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1rem; }
+    .order.is-new { border-color:#a80f0f; box-shadow:0 0 0 2px rgba(168,15,15,0.08); }
+    .order-top { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+    .order-ref { font-family:'Bebas Neue',sans-serif; font-size:1.35rem; letter-spacing:0.03em; }
+    .order-mode { display:inline-block; font-size:0.58rem; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; padding:0.15rem 0.5rem; border-radius:5px; background:var(--stone); margin-left:0.5rem; vertical-align:middle; }
+    .order-meta { font-size:0.74rem; color:var(--muted); }
+    .order-total { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; letter-spacing:0.02em; }
+    .order-cust { font-size:0.86rem; margin:0.65rem 0; line-height:1.5; }
+    .order-cust a { color:#000; font-weight:700; }
+    .order-items { list-style:none; margin:0.4rem 0 0.2rem; font-size:0.85rem; }
+    .order-items li { display:flex; justify-content:space-between; gap:1rem; padding:0.22rem 0; border-bottom:1px dashed rgba(0,0,0,0.08); }
+    .order-actions { display:flex; gap:0.6rem; align-items:center; margin-top:0.9rem; flex-wrap:wrap; }
+    .order-actions select { border:1.5px solid var(--line); border-radius:8px; padding:0.45rem 0.6rem; font-family:'Inter',sans-serif; font-weight:700; font-size:0.78rem; background:var(--off); }
+
     /* modal */
     .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:200; align-items:center; justify-content:center; padding:5vw; }
     .overlay.open { display:flex; }
@@ -147,13 +167,15 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-tab="rota">📅 Rota</button>
+  <button class="tab active" data-tab="orders">📋 Orders<span class="badge-count" id="orders-badge"></span></button>
+  <button class="tab" data-tab="rota">📅 Rota</button>
   <button class="tab" data-tab="team">👥 Team</button>
   <button class="tab" data-tab="reports">📊 Reports &amp; Staffing</button>
 </div>
 
 <div class="wrap">
-  <div class="panel active" id="panel-rota"></div>
+  <div class="panel active" id="panel-orders"></div>
+  <div class="panel" id="panel-rota"></div>
   <div class="panel" id="panel-team"></div>
   <div class="panel" id="panel-reports"></div>
 </div>
@@ -518,8 +540,110 @@
   function kpi(v,l){ var k=el('div','kpi'); k.appendChild(el('strong',null,String(v))); k.appendChild(el('span',null,l)); return k; }
   function numField(label,val,onInput){ var f=el('div','field'); f.appendChild(el('label',null,label)); var i=el('input'); i.type='number'; i.value=val; i.addEventListener('input',function(){ onInput(parseFloat(i.value)); }); f.appendChild(i); return f; }
 
+  // ---------------- ORDERS ----------------
+  function fmtTime(ts){ try { return new Date(ts).toLocaleString('en-GB',{ weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); } catch(e){ return ''; } }
+  var ORDER_STATUSES = (window.ppcOrders ? ppcOrders.STATUSES : ['New','Preparing','Ready','Completed']);
+
+  function updateOrdersBadge(){
+    var b = document.getElementById('orders-badge'); if(!b) return;
+    var sb = cloudSb();
+    if (sb){
+      sb.auth.getSession().then(function(r){
+        if(!r.data || !r.data.session){ b.textContent=''; return; }
+        sb.from('orders').select('*', { count:'exact', head:true }).eq('status','New').then(function(res){ b.textContent = res.count ? res.count : ''; });
+      });
+      return;
+    }
+    var n = (window.ppcOrders ? ppcOrders.countNew() : 0); b.textContent = n ? n : '';
+  }
+
+  function ordersToolbar(panel, total, newCount, isCloud){
+    var bar = el('div','orders-toolbar');
+    bar.appendChild(el('div','orders-count','<strong>'+total+'</strong> total &middot; <strong style="color:#a80f0f">'+newCount+'</strong> new'+(isCloud?' &middot; <span style="color:#1f7a3d">● live across devices</span>':'')));
+    bar.appendChild(el('div','spacer'));
+    var refresh = el('button','btn btn-light btn-sm','↻ Refresh');
+    refresh.addEventListener('click', function(){ renderOrders(); updateOrdersBadge(); });
+    bar.appendChild(refresh);
+    if (!isCloud){
+      var clr = el('button','btn btn-light btn-sm','Clear completed');
+      clr.addEventListener('click', function(){ if(!confirm('Remove all completed orders?'))return; ppcOrders.list().forEach(function(o){ if((o.status||'New')==='Completed') ppcOrders.remove(o.ref); }); renderOrders(); updateOrdersBadge(); });
+      bar.appendChild(clr);
+    }
+    panel.appendChild(bar);
+  }
+
+  function renderOrders(){
+    var panel = document.getElementById('panel-orders'); panel.innerHTML='';
+    panel.appendChild(el('div','panel-head','<h2>Orders</h2>'));
+    var sb = cloudSb();
+    if (sb){
+      panel.appendChild(el('div','empty','Loading live orders…'));
+      sb.auth.getSession().then(function(r){
+        var sess = r.data && r.data.session;
+        panel.innerHTML=''; panel.appendChild(el('div','panel-head','<h2>Orders</h2>'));
+        if(!sess){ panel.appendChild(el('div','empty','<span class="big">🔒</span>Log in to view live orders.')); return; }
+        sb.from('orders').select('*').order('created_at',{ascending:false}).then(function(res){
+          if(res.error){ panel.appendChild(el('div','empty','Could not load orders: '+esc(res.error.message))); return; }
+          var rows = (res.data||[]).map(function(o){ return { ref:o.ref, ts:Date.parse(o.created_at), status:o.status||'New', mode:o.mode, customer:o.customer, items:o.items, subtotal:o.subtotal, fee:o.fee, total:o.total }; });
+          var newCount = rows.filter(function(o){ return (o.status||'New')==='New'; }).length;
+          ordersToolbar(panel, rows.length, newCount, true);
+          if(!rows.length){ panel.appendChild(el('div','empty','<span class="big">🧾</span>No orders yet.<br>New website orders appear here automatically.')); return; }
+          rows.forEach(function(o){ panel.appendChild(orderCard(o, true)); });
+        });
+      });
+      return;
+    }
+    var orders = window.ppcOrders ? ppcOrders.list() : [];
+    ordersToolbar(panel, orders.length, (window.ppcOrders?ppcOrders.countNew():0), false);
+    if(!orders.length){ panel.appendChild(el('div','empty','<span class="big">🧾</span>No orders yet.<br>Orders placed on this device will appear here.')); return; }
+    orders.forEach(function(o){ panel.appendChild(orderCard(o, false)); });
+  }
+
+  function orderCard(o, isCloud){
+    var status = o.status || 'New';
+    var card = el('div','order'+(status==='New'?' is-new':''));
+    var top = el('div','order-top');
+    var left = el('div');
+    left.appendChild(el('div','order-ref', esc(o.ref)+'<span class="order-mode">'+(o.mode==='delivery'?'Delivery':'Collection')+'</span>'));
+    left.appendChild(el('div','order-meta', fmtTime(o.ts)));
+    top.appendChild(left);
+    top.appendChild(el('div','order-total', money(o.total)));
+    card.appendChild(top);
+    var c = o.customer || {};
+    card.appendChild(el('div','order-cust','<b>'+esc(c.name)+'</b> &middot; <a href="tel:'+esc(c.phone)+'">'+esc(c.phone)+'</a>'+(c.address?'<br>📍 '+esc(c.address):'')+(c.notes?'<br>📝 '+esc(c.notes):'')));
+    var ul = el('ul','order-items');
+    (o.items||[]).forEach(function(it){ ul.appendChild(el('li',null,'<span>'+it.qty+'× '+esc(it.name)+'</span><span>'+money(it.line)+'</span>')); });
+    card.appendChild(ul);
+    if (o.fee){ var fl=el('div','order-meta'); fl.style.textAlign='right'; fl.textContent='incl. '+money(o.fee)+' delivery'; card.appendChild(fl); }
+    var act = el('div','order-actions');
+    act.appendChild(el('span',null,'Status:'));
+    var sel = el('select');
+    ORDER_STATUSES.forEach(function(s){ var op=el('option',null,s); op.value=s; if(s===status)op.selected=true; sel.appendChild(op); });
+    sel.addEventListener('change', function(){
+      if (isCloud){
+        cloudSb().from('orders').update({ status:sel.value }).eq('ref', o.ref).then(function(res){
+          if(res.error){ alert('Could not update: '+res.error.message); return; }
+          if(window.ppcAudit) ppcAudit.log('Updated order '+o.ref, '→ '+sel.value);
+          renderOrders(); updateOrdersBadge();
+        });
+      } else {
+        ppcOrders.setStatus(o.ref, sel.value);
+        if(window.ppcAudit) ppcAudit.log('Updated order '+o.ref, '→ '+sel.value);
+        renderOrders(); updateOrdersBadge();
+      }
+    });
+    act.appendChild(sel);
+    if (!isCloud){
+      var del = el('button','btn btn-danger btn-sm','Delete');
+      del.addEventListener('click', function(){ if(!confirm('Delete order '+o.ref+'?'))return; ppcOrders.remove(o.ref); renderOrders(); updateOrdersBadge(); });
+      act.appendChild(del);
+    }
+    card.appendChild(act);
+    return card;
+  }
+
   // ---------------- shell ----------------
-  var RENDERERS = { rota: renderRota, team: renderTeam, reports: renderReports };
+  var RENDERERS = { orders: function(){ renderOrders(); updateOrdersBadge(); }, rota: renderRota, team: renderTeam, reports: renderReports };
   document.querySelectorAll('.tab').forEach(function(t){
     t.addEventListener('click',function(){
       document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
@@ -536,7 +660,7 @@
     else { renderAll(); }
   };
 
-  function renderAll(){ renderRota(); renderTeam(); renderReports(); }
+  function renderAll(){ renderOrders(); updateOrdersBadge(); renderRota(); renderTeam(); renderReports(); }
 
   if (cloudSb()) {
     refreshWho(); // shared data loads + renders once signed in (ppcOnLogin)

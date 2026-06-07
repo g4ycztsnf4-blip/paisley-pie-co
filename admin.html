@@ -388,8 +388,7 @@
 </div>
 
 <div class="tabs">
-  <button class="tab active" data-tab="orders">📋 Orders<span class="badge-count" id="orders-badge"></span></button>
-  <button class="tab" data-tab="menu">🥧 Menu &amp; Prices</button>
+  <button class="tab active" data-tab="menu">🥧 Menu &amp; Prices</button>
   <button class="tab" data-tab="deals">🏷️ Deals</button>
   <button class="tab" data-tab="news">📰 News</button>
   <button class="tab" data-tab="info">🏪 Shop Info</button>
@@ -397,8 +396,7 @@
 </div>
 
 <div class="wrap">
-  <div class="panel active" id="panel-orders"></div>
-  <div class="panel" id="panel-menu"></div>
+  <div class="panel active" id="panel-menu"></div>
   <div class="panel" id="panel-deals"></div>
   <div class="panel" id="panel-news"></div>
   <div class="panel" id="panel-info"></div>
@@ -1002,12 +1000,11 @@
   }
   document.getElementById('logout-btn').addEventListener('click', function(){ if (window.ppcLogout) ppcLogout(); });
   // called by the login gate when someone signs in
-  window.ppcOnLogin = function(){ refreshWho(); renderOrders(); updateOrdersBadge(); };
+  window.ppcOnLogin = function(){ refreshWho(); };
 
-  function renderAll() { renderOrders(); renderMenu(); renderDeals(); renderNews(); renderInfo(); renderActivity(); }
+  function renderAll() { renderMenu(); renderDeals(); renderNews(); renderInfo(); renderActivity(); }
   renderAll();
   refreshWho();
-  updateOrdersBadge();
   markDirty();
 </script>
 </body>
