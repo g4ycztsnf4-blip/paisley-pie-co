@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root { --black:#000; --charcoal:#0d0d0d; --grey:#181818; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; }
@@ -175,7 +177,7 @@
     document.getElementById('menu-wrap').innerHTML = cats.map(function(c){
       var list = items.filter(function(it){ return it.cat === c.key; }).map(function(it){
         var badge = it.badgeText ? ' <span class="badge '+esc(it.badge||'')+'">'+esc(it.badgeText)+'</span>' : '';
-        return '<div class="mi"><div class="mi-body"><div class="mi-name">'+esc(it.name)+badge+
+        return '<div class="mi" data-id="'+esc(it.id)+'"><div class="mi-body"><div class="mi-name">'+esc(it.name)+badge+
                '</div><div class="mi-desc">'+esc(it.desc)+'</div></div>'+
                '<div class="mi-dots"></div><div class="mi-price">'+ppcMoney(it.price)+'</div></div>';
       }).join('');
@@ -185,6 +187,21 @@
                (c.note ? '<span class="cat-note">'+esc(c.note)+'</span>' : '')+'</div>'+
                '<div class="menu-list">'+list+'</div></section>';
     }).join('');
+
+    // Mark sold-out items (set in the manager)
+    var sb = window.ppcCloud && window.ppcCloud();
+    if (sb) {
+      sb.rpc('get_soldout').then(function(res){
+        var ids = (res && !res.error && Array.isArray(res.data)) ? res.data : [];
+        ids.forEach(function(id){
+          var row = document.querySelector('.mi[data-id="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+          if (!row) return;
+          row.style.opacity = '0.5';
+          var price = row.querySelector('.mi-price');
+          if (price) price.innerHTML = '<span style="font-size:0.7rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#a80f0f">Sold out</span>';
+        });
+      });
+    }
   }
   render();
 </script>

@@ -500,6 +500,21 @@
   renderMenu();
   renderCart();
 
+  // ---- Grey out / disable items marked Sold Out in the manager ----
+  (function applySoldout(){
+    var sb = window.ppcCloud && window.ppcCloud();
+    if (!sb) return;
+    sb.rpc('get_soldout').then(function(res){
+      var ids = (res && !res.error && Array.isArray(res.data)) ? res.data : [];
+      ids.forEach(function(id){
+        var btn = document.querySelector('[data-add="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
+        if (!btn) return;
+        btn.disabled = true; btn.textContent = 'Sold out'; btn.style.opacity = '0.6'; btn.style.cursor = 'not-allowed';
+        var card = btn.closest('.item'); if (card) card.style.opacity = '0.5';
+      });
+    });
+  })();
+
   // ---- Busy switch: if ordering is turned off in the manager, show the waitlist screen ----
   (function applyOrderingStatus() {
     var st = _d.siteStatus || { ordersOpen: true };

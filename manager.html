@@ -168,6 +168,7 @@
 
 <div class="tabs">
   <button class="tab active" data-tab="orders">📋 Orders<span class="badge-count" id="orders-badge"></span></button>
+  <button class="tab" data-tab="soldout">🚫 Sold Out</button>
   <button class="tab" data-tab="rota">📅 Rota</button>
   <button class="tab" data-tab="team">👥 Team</button>
   <button class="tab" data-tab="reports">📊 Reports &amp; Staffing</button>
@@ -175,6 +176,7 @@
 
 <div class="wrap">
   <div class="panel active" id="panel-orders"></div>
+  <div class="panel" id="panel-soldout"></div>
   <div class="panel" id="panel-rota"></div>
   <div class="panel" id="panel-team"></div>
   <div class="panel" id="panel-reports"></div>
@@ -720,8 +722,42 @@
     else { downloadFile(ordersToCSV(window.ppcOrders?ppcOrders.list():[]), 'paisley-orders.csv'); toast('CSV downloaded'); }
   }
 
+  // ---------------- SOLD OUT ----------------
+  function renderSoldout(){
+    var panel=document.getElementById('panel-soldout'); panel.innerHTML='';
+    panel.appendChild(el('div','panel-head','<h2>Sold Out</h2>'));
+    var sb=cloudSb();
+    if(sb){
+      panel.appendChild(el('div','empty','Loading…'));
+      sb.rpc('get_soldout').then(function(res){ buildSoldout(panel, (res&&!res.error&&Array.isArray(res.data))?res.data:[]); });
+    } else { buildSoldout(panel, []); }
+  }
+  function buildSoldout(panel, soldSet){
+    panel.innerHTML=''; panel.appendChild(el('div','panel-head','<h2>Sold Out</h2>'));
+    panel.appendChild(el('div','hint','Flip an item to “Sold out” and it greys out on the menu and can’t be ordered. Flip it back when it’s available again — updates are instant for customers.'));
+    var d=(typeof ppcData==='function')?ppcData():(window.PPC_DATA||{}); var cats=d.menuCategories||[], items=d.menu||[];
+    cats.forEach(function(c){
+      var its=items.filter(function(it){ return it.cat===c.key; }); if(!its.length) return;
+      panel.appendChild(el('div','cat-title', c.title));
+      var card=el('div','card');
+      its.forEach(function(it){
+        var row=el('div'); row.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.55rem 0;border-bottom:1px solid var(--line)';
+        var isSold=soldSet.indexOf(it.id)>=0;
+        row.appendChild(el('div',null,'<strong'+(isSold?' style="opacity:0.5;text-decoration:line-through"':'')+'>'+esc(it.name)+'</strong> <span style="color:var(--muted);font-size:0.8rem">'+money(it.price)+'</span>'));
+        var btn=el('button','btn btn-sm '+(isSold?'btn-danger':'btn-light'), isSold?'Sold out':'Available');
+        btn.addEventListener('click', function(){
+          var idx=soldSet.indexOf(it.id); if(idx>=0) soldSet.splice(idx,1); else soldSet.push(it.id);
+          saveSoldout(soldSet); buildSoldout(panel, soldSet);
+        });
+        row.appendChild(btn); card.appendChild(row);
+      });
+      panel.appendChild(card);
+    });
+  }
+  function saveSoldout(arr){ var sb=cloudSb(); if(!sb){ toast('Connect the cloud to use this'); return; } sb.rpc('set_soldout',{ p_ids: arr }).then(function(res){ toast((res&&res.error)?('Error: '+res.error.message):'Saved ✓'); }); }
+
   // ---------------- shell ----------------
-  var RENDERERS = { orders: function(){ renderOrders(); updateOrdersBadge(); }, rota: renderRota, team: renderTeam, reports: renderReports };
+  var RENDERERS = { orders: function(){ renderOrders(); updateOrdersBadge(); }, soldout: renderSoldout, rota: renderRota, team: renderTeam, reports: renderReports };
   document.querySelectorAll('.tab').forEach(function(t){
     t.addEventListener('click',function(){
       document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
@@ -738,7 +774,7 @@
     else { renderAll(); }
   };
 
-  function renderAll(){ renderOrders(); updateOrdersBadge(); renderRota(); renderTeam(); renderReports(); }
+  function renderAll(){ renderOrders(); updateOrdersBadge(); renderSoldout(); renderRota(); renderTeam(); renderReports(); }
 
   if (cloudSb()) {
     refreshWho(); // shared data loads + renders once signed in (ppcOnLogin)
