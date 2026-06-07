@@ -38,9 +38,9 @@ window.ppcCloud = function () {
      To Email: {{to_email}}   Subject: {{subject}}   Body: {{message}}
 --------------------------------------------------------------- */
 window.PPC_EMAILJS = {
-  publicKey:  "",   // e.g. "AbCdEf123..."
-  serviceId:  "",   // e.g. "service_xxxx"
-  templateId: ""    // e.g. "template_xxxx"
+  publicKey:  "CFO3v5X6dG31y4v-S",
+  serviceId:  "service_8rbeq2u",
+  templateId: "template_rz4winj"
 };
 window.ppcEmailReady = function () {
   var e = window.PPC_EMAILJS;
