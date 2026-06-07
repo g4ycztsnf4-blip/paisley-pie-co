@@ -631,7 +631,7 @@
     top.appendChild(el('div','order-total', money(o.total)));
     card.appendChild(top);
     var c = o.customer || {};
-    card.appendChild(el('div','order-cust','<b>'+esc(c.name)+'</b> &middot; <a href="tel:'+esc(c.phone)+'">'+esc(c.phone)+'</a>'+(c.address?'<br>📍 '+esc(c.address):'')+(c.notes?'<br>📝 '+esc(c.notes):'')));
+    card.appendChild(el('div','order-cust','<b>'+esc(c.name)+'</b> &middot; <a href="tel:'+esc(c.phone)+'">'+esc(c.phone)+'</a>'+(c.when?'<br>⏰ <b>'+esc(c.when)+'</b>':'')+(c.address?'<br>📍 '+esc(c.address):'')+(c.notes?'<br>📝 '+esc(c.notes):'')));
     var ul = el('ul','order-items');
     (o.items||[]).forEach(function(it){ ul.appendChild(el('li',null,'<span>'+it.qty+'× '+esc(it.name)+'</span><span>'+money(it.line)+'</span>')); });
     card.appendChild(ul);
@@ -699,7 +699,7 @@
     var items=(o.items||[]).map(function(it){ return '<tr><td>'+it.qty+'×</td><td>'+esc(it.name)+'</td><td style="text-align:right">'+money(it.line)+'</td></tr>'; }).join('');
     var html='<html><head><title>'+esc(o.ref)+'</title><style>body{font-family:monospace;padding:8px;width:280px;color:#000}h2{margin:0 0 4px;font-size:16px}div{font-size:12px}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:2px 0;vertical-align:top}hr{border:none;border-top:1px dashed #000;margin:6px 0}.r{text-align:right}</style></head><body>'+
       '<h2>PAISLEY PIE CO.</h2><div><b>'+esc(o.ref)+'</b> · '+(o.mode==='delivery'?'DELIVERY':'COLLECTION')+'</div><div>'+fmtTime(o.ts)+'</div><hr>'+
-      '<div><b>'+esc(c.name||'')+'</b> &nbsp; '+esc(c.phone||'')+'</div>'+(c.address?'<div>📍 '+esc(c.address)+'</div>':'')+(c.notes?'<div>📝 '+esc(c.notes)+'</div>':'')+'<hr>'+
+      '<div><b>'+esc(c.name||'')+'</b> &nbsp; '+esc(c.phone||'')+'</div>'+(c.when?'<div><b>⏰ '+esc(c.when)+'</b></div>':'')+(c.address?'<div>📍 '+esc(c.address)+'</div>':'')+(c.notes?'<div>📝 '+esc(c.notes)+'</div>':'')+'<hr>'+
       '<table>'+items+'</table><hr><div class="r"><b>TOTAL '+money(o.total)+'</b></div>'+(o.fee?'<div class="r">incl '+money(o.fee)+' delivery</div>':'')+'<hr><div class="r">Thanks! 🥧</div>'+
       '</body></html>';
     var w=window.open('','_blank','width=320,height=640'); if(!w){ alert('Allow pop-ups to print tickets.'); return; }

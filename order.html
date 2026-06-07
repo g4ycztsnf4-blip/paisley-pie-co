@@ -133,8 +133,8 @@
     .modal.form .sub { color:var(--muted); font-size:0.85rem; margin-bottom:1.25rem; }
     .modal.form .fld { display:flex; flex-direction:column; gap:0.3rem; margin-bottom:0.85rem; }
     .modal.form .fld label { font-size:0.66rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
-    .modal.form .fld input, .modal.form .fld textarea { border:1.5px solid rgba(0,0,0,0.18); border-radius:9px; padding:0.7rem 0.85rem; font-family:'Inter',sans-serif; font-size:0.9rem; width:100%; }
-    .modal.form .fld input:focus, .modal.form .fld textarea:focus { outline:none; border-color:#000; }
+    .modal.form .fld input, .modal.form .fld textarea, .modal.form .fld select { border:1.5px solid rgba(0,0,0,0.18); border-radius:9px; padding:0.7rem 0.85rem; font-family:'Inter',sans-serif; font-size:0.9rem; width:100%; background:#fff; }
+    .modal.form .fld input:focus, .modal.form .fld textarea:focus, .modal.form .fld select:focus { outline:none; border-color:#000; }
     .modal.form .fld textarea { resize:vertical; min-height:54px; }
     .modal.form .err { color:#a80f0f; font-size:0.78rem; min-height:1em; margin-bottom:0.3rem; }
 
@@ -255,6 +255,10 @@
   <div class="modal form">
     <h3>ALMOST THERE</h3>
     <p class="sub" id="details-sub">Add your details so we can get your order ready.</p>
+    <div class="fld">
+      <label id="when-label">When would you like it?</label>
+      <select id="cust-when"></select>
+    </div>
     <div class="fld">
       <label>Your name *</label>
       <input type="text" id="cust-name" placeholder="e.g. Chloe M." />
@@ -430,9 +434,42 @@
       ? 'Add your details for delivery within 3 miles of Causeyside Street.'
       : 'Add your details so we can have your order ready for collection.';
     document.getElementById('details-err').textContent = '';
+    populateSlots();
     detailsModal.classList.add('open');
     closeMobileCart();
   });
+
+  // ---- Pre-order time slots (built from opening hours) ----
+  function parseClock(s) { var m = (s || '').match(/(\d{1,2}):(\d{2})\s*(am|pm)/i); if (!m) return null; var h = +m[1] % 12; if (/pm/i.test(m[3])) h += 12; return h * 60 + (+m[2]); }
+  function dayHours(date) {
+    var info = _d.info || {}; var name = date.toLocaleDateString('en-GB', { weekday: 'long' });
+    var row = (info.hours || []).filter(function (h) { return h.day === name; })[0];
+    if (!row || /closed/i.test(row.time)) return null;
+    var parts = row.time.split(/[–-]/); var o = parseClock(parts[0]), c = parseClock(parts[1]);
+    return (o != null && c != null) ? { open: o, close: c } : null;
+  }
+  function populateSlots() {
+    var sel = document.getElementById('cust-when');
+    var lead = (mode === 'delivery') ? 40 : 20;
+    var leadLbl = (mode === 'delivery') ? '~35–45 min' : '~15–20 min';
+    var opts = ['<option value="ASAP (' + leadLbl + ')">ASAP (' + leadLbl + ')</option>'];
+    var now = new Date();
+    for (var dOff = 0; dOff < 2; dOff++) {
+      var date = new Date(); date.setDate(now.getDate() + dOff); date.setSeconds(0, 0);
+      var hrs = dayHours(date); if (!hrs) continue;
+      var dayLbl = dOff === 0 ? 'Today' : 'Tomorrow';
+      var startMin = hrs.open;
+      if (dOff === 0) { var nowMin = now.getHours() * 60 + now.getMinutes() + lead; startMin = Math.max(hrs.open, Math.ceil(nowMin / 15) * 15); }
+      for (var m = startMin; m <= hrs.close; m += 15) {
+        var hh = Math.floor(m / 60), mm = m % 60;
+        var d2 = new Date(date); d2.setHours(hh, mm, 0, 0);
+        var t = d2.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true });
+        var label = dayLbl + ' ' + t;
+        opts.push('<option value="' + label + '">' + label + '</option>');
+      }
+    }
+    sel.innerHTML = opts.join('');
+  }
   document.getElementById('details-cancel').addEventListener('click', () => detailsModal.classList.remove('open'));
   detailsModal.addEventListener('click', e => { if (e.target.id === 'details-modal') e.target.classList.remove('open'); });
 
@@ -441,6 +478,7 @@
     var phone = document.getElementById('cust-phone').value.trim();
     var addr = document.getElementById('cust-addr').value.trim();
     var notes = document.getElementById('cust-notes').value.trim();
+    var when = document.getElementById('cust-when').value;
     if (!name || !phone || (mode === 'delivery' && !addr)) {
       document.getElementById('details-err').textContent = 'Please fill in your name, phone' + (mode === 'delivery' ? ' and delivery address.' : '.');
       return;
@@ -453,7 +491,7 @@
     var ref = 'PPC-' + Math.floor(1000 + Math.random() * 9000);
     var order = {
       ref: ref, ts: Date.now(), status: 'New', mode: mode,
-      customer: { name: name, phone: phone, address: mode === 'delivery' ? addr : '', notes: notes },
+      customer: { name: name, phone: phone, address: mode === 'delivery' ? addr : '', notes: notes, when: when },
       items: lines, subtotal: +t.sub.toFixed(2), fee: +t.fee.toFixed(2), total: +t.grand.toFixed(2)
     };
     if (window.ppcOrders) ppcOrders.add(order); // local copy (this device)
@@ -470,9 +508,10 @@
 
     document.getElementById('order-ref').textContent = ref;
     document.getElementById('modal-track').href = 'track.html?ref=' + encodeURIComponent(ref);
-    document.getElementById('modal-mode-line').textContent = mode === 'delivery'
-      ? 'On its way to you within ~35–45 min.'
-      : 'Collect from 25 Causeyside St in ~15–20 min.';
+    var whenIsAsap = /^ASAP/i.test(when);
+    document.getElementById('modal-mode-line').textContent = whenIsAsap
+      ? (mode === 'delivery' ? 'On its way to you within ~35–45 min.' : 'Collect from 25 Causeyside St in ~15–20 min.')
+      : (mode === 'delivery' ? 'Delivery booked for ' + when + '.' : 'Collection booked for ' + when + ' at 25 Causeyside St.');
     detailsModal.classList.remove('open');
     document.getElementById('modal').classList.add('open');
 
