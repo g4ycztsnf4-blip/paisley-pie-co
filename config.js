@@ -28,3 +28,29 @@ window.ppcCloud = function () {
   } catch (e) {}
   return null;
 };
+
+/* ---------------------------------------------------------------
+   EMAILJS (auto-send rotas to staff + "we're live" to the waitlist)
+   Create a free account at emailjs.com, add an email Service and a
+   Template, then paste the 3 values below (Account → API Keys for the
+   public key; the Service and Template each have their own ID).
+   Your template should use these variables:
+     To Email: {{to_email}}   Subject: {{subject}}   Body: {{message}}
+--------------------------------------------------------------- */
+window.PPC_EMAILJS = {
+  publicKey:  "",   // e.g. "AbCdEf123..."
+  serviceId:  "",   // e.g. "service_xxxx"
+  templateId: ""    // e.g. "template_xxxx"
+};
+window.ppcEmailReady = function () {
+  var e = window.PPC_EMAILJS;
+  return !!(e && e.publicKey && e.serviceId && e.templateId && window.emailjs);
+};
+/* Sends one email; returns a Promise. Rejects if EmailJS isn't set up. */
+window.ppcSendEmail = function (toEmail, toName, subject, message) {
+  if (!window.ppcEmailReady()) return Promise.reject(new Error('EmailJS not set up'));
+  try { if (!window._ppcEmailInit) { window.emailjs.init({ publicKey: window.PPC_EMAILJS.publicKey }); window._ppcEmailInit = true; } } catch (e) {}
+  return window.emailjs.send(window.PPC_EMAILJS.serviceId, window.PPC_EMAILJS.templateId, {
+    to_email: toEmail, to_name: toName || '', subject: subject || '', message: message || ''
+  });
+};

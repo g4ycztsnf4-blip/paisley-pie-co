@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -747,7 +748,16 @@
       st.ordersOpen = !st.ordersOpen;
       save();
       if (window.ppcAudit) ppcAudit.log(st.ordersOpen ? 'Turned online ordering ON' : 'Turned online ordering OFF');
+      var resuming = st.ordersOpen;
       renderInfo();
+      // On reopen, offer to email the waitlist (if EmailJS is set up)
+      if (resuming && window.ppcEmailReady && window.ppcEmailReady()) {
+        var sb = window.ppcCloud && window.ppcCloud();
+        if (sb) sb.from('waitlist').select('email,created_at').then(function(res){
+          var rows = res.error ? [] : (res.data || []);
+          if (rows.length && confirm("You're open again — email the " + rows.length + " people waiting that you're taking orders?")) emailWaitlist(rows);
+        });
+      }
     });
     statusLine.appendChild(statusLabel); statusLine.appendChild(toggle);
     oc.appendChild(statusLine);
@@ -757,29 +767,53 @@
     panel.appendChild(oc);
 
     // ----- Waitlist (people who asked to be notified) -----
-    var wl = [];
-    try { wl = JSON.parse(localStorage.getItem('ppc_waitlist') || '[]'); } catch (e) {}
-    panel.appendChild(el('div', 'cat-title', 'Notify list (' + wl.length + ')'));
-    var wc = el('div', 'card');
-    if (!wl.length) {
-      wc.appendChild(el('div', null, 'No one waiting right now. Emails collected on the “we’re busy” screen show here.')).style.cssText = 'color:var(--muted);font-size:0.88rem';
-    } else {
-      var list = el('div'); list.style.cssText = 'font-size:0.86rem;line-height:1.9';
-      wl.slice().reverse().forEach(function(w){ list.appendChild(el('div', null, esc(w.email) + ' <span style="color:var(--muted)">· ' + fmtTime(w.ts) + '</span>')); });
+    panel.appendChild(el('div', 'cat-title', 'Notify list'));
+    var wc = el('div', 'card'); panel.appendChild(wc);
+    fillWaitlist(wc);
+  }
+
+  function fillWaitlist(wc) {
+    wc.innerHTML = 'Loading…';
+    var sb = window.ppcCloud && window.ppcCloud();
+    function render(rows) {
+      // normalise {email, ts}
+      rows = (rows || []).map(function(w){ return { email: w.email, ts: w.ts || Date.parse(w.created_at) || Date.now() }; });
+      wc.innerHTML = '';
+      if (!rows.length) { var n = el('div', null, 'No one waiting right now. Emails from the “we’re busy” screen show here.'); n.style.cssText = 'color:var(--muted);font-size:0.88rem'; wc.appendChild(n); return; }
+      var h = el('div', null, '<strong>' + rows.length + '</strong> waiting'); h.style.marginBottom = '0.5rem'; wc.appendChild(h);
+      var list = el('div'); list.style.cssText = 'font-size:0.86rem;line-height:1.9;max-height:200px;overflow:auto';
+      rows.slice().reverse().forEach(function(w){ list.appendChild(el('div', null, esc(w.email) + ' <span style="color:var(--muted)">· ' + fmtTime(w.ts) + '</span>')); });
       wc.appendChild(list);
       var btns = el('div'); btns.style.cssText = 'display:flex;gap:0.6rem;margin-top:1rem;flex-wrap:wrap';
       var copy = el('button', 'btn btn-light btn-sm', 'Copy all emails');
-      copy.addEventListener('click', function(){
-        var txt = wl.map(function(w){ return w.email; }).join(', ');
-        navigator.clipboard && navigator.clipboard.writeText(txt);
-        toast('Emails copied');
-      });
+      copy.addEventListener('click', function(){ navigator.clipboard && navigator.clipboard.writeText(rows.map(function(w){ return w.email; }).join(', ')); toast('Emails copied'); });
+      btns.appendChild(copy);
+      if (window.ppcEmailReady && window.ppcEmailReady()) {
+        var em = el('button', 'btn btn-publish btn-sm', '📧 Email everyone “we’re live”');
+        em.addEventListener('click', function(){ if (confirm('Email ' + rows.length + " people that you're taking orders again?")) emailWaitlist(rows); });
+        btns.appendChild(em);
+      }
       var clr = el('button', 'btn btn-danger btn-sm', 'Clear list');
-      clr.addEventListener('click', function(){ if (!confirm('Clear the notify list?')) return; localStorage.removeItem('ppc_waitlist'); renderInfo(); });
-      btns.appendChild(copy); btns.appendChild(clr);
+      clr.addEventListener('click', clearWaitlist);
+      btns.appendChild(clr);
       wc.appendChild(btns);
     }
-    panel.appendChild(wc);
+    if (sb) sb.from('waitlist').select('email,created_at').order('created_at', { ascending: true }).then(function(res){ render(res.error ? [] : res.data); });
+    else { var wl = []; try { wl = JSON.parse(localStorage.getItem('ppc_waitlist') || '[]'); } catch (e) {} render(wl); }
+  }
+  function emailWaitlist(rows) {
+    if (!window.ppcEmailReady || !window.ppcEmailReady()) { toast('EmailJS not set up'); return; }
+    var url = location.href.replace(/admin\.html.*$/, '') + 'order.html';
+    var msg = "Good news — Paisley Pie Co. is taking online orders again! 🥧\n\nOrder now: " + url + "\n\n— Paisley Pie Co.";
+    var done = 0, failed = 0, chain = Promise.resolve();
+    rows.forEach(function(w){ chain = chain.then(function(){ return window.ppcSendEmail(w.email, '', "We're taking orders again! 🥧", msg).then(function(){ done++; }, function(){ failed++; }); }); });
+    chain.then(function(){ toast('Emailed ' + done + (failed ? (' · ' + failed + ' failed') : '')); if (window.ppcAudit) ppcAudit.log('Emailed the waitlist', done + ' sent' + (failed ? (', ' + failed + ' failed') : '')); });
+  }
+  function clearWaitlist() {
+    if (!confirm('Clear the notify list?')) return;
+    var sb = window.ppcCloud && window.ppcCloud();
+    if (sb) sb.from('waitlist').delete().neq('email', '___never___').then(function(res){ if (res.error) toast('Could not clear: ' + res.error.message); else { toast('List cleared'); renderInfo(); } });
+    else { localStorage.removeItem('ppc_waitlist'); renderInfo(); }
   }
 
   // ============================================================
@@ -1000,7 +1034,7 @@
   }
   document.getElementById('logout-btn').addEventListener('click', function(){ if (window.ppcLogout) ppcLogout(); });
   // called by the login gate when someone signs in
-  window.ppcOnLogin = function(){ refreshWho(); };
+  window.ppcOnLogin = function(){ refreshWho(); renderInfo(); }; // re-render so the cloud waitlist loads with the staff session
 
   function renderAll() { renderMenu(); renderDeals(); renderNews(); renderInfo(); renderActivity(); }
   renderAll();

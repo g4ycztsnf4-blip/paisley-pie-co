@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
@@ -373,12 +374,14 @@
     DAYS.forEach(function(d){ (rota.days[d]||[]).forEach(function(sh){ if(!sh.workerId)return; (byWorker[sh.workerId]=byWorker[sh.workerId]||[]).push({ d:d, start:sh.start, end:sh.end }); }); });
     var box = document.getElementById('rota-messages'); box.innerHTML='';
     var anyone = false;
+    var emailable = [];
     team.forEach(function(w){
       var shifts = byWorker[w.id];
       if (!shifts || !shifts.length) return;
       anyone = true;
       var lines = shifts.map(function(s){ return DAYFULL[s.d] + ': ' + s.start + '–' + s.end; }).join('\n');
       var msg = 'Hi ' + w.name + ', your shifts for the week beginning ' + fmtDate(rota.weekStart) + ':\n' + lines + '\n— Paisley Pie Co.';
+      if (w.email) emailable.push({ name:w.name, email:w.email, msg:msg });
       var card = el('div','msg-card');
       card.appendChild(el('div','who2', esc(w.name) + (w.email?(' · '+esc(w.email)):'') + (w.phone?(' · '+esc(w.phone)):'')));
       var pre = el('pre'); pre.textContent = msg; card.appendChild(pre);
@@ -391,6 +394,30 @@
       box.appendChild(card);
     });
     if (!anyone) box.innerHTML = '<div class="empty">No shifts assigned yet.</div>';
+    // Auto-send-all (only if EmailJS is set up)
+    if (anyone && window.ppcEmailReady && window.ppcEmailReady() && emailable.length) {
+      var bar = el('div'); bar.style.cssText = 'margin-bottom:1rem;display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap';
+      var all = el('button','btn btn-green','📧 Email all '+emailable.length+' now');
+      var statusEl = el('span'); statusEl.style.cssText='font-size:0.82rem;color:var(--muted)';
+      all.addEventListener('click', function(){
+        all.disabled=true; var done=0, failed=0;
+        statusEl.textContent='Sending…';
+        var chain = Promise.resolve();
+        emailable.forEach(function(r){
+          chain = chain.then(function(){
+            return window.ppcSendEmail(r.email, r.name, 'Your Paisley Pie Co. rota', r.msg)
+              .then(function(){ done++; }, function(){ failed++; });
+          });
+        });
+        chain.then(function(){
+          statusEl.textContent = 'Sent '+done+(failed?(' · '+failed+' failed'):'');
+          if(window.ppcAudit) ppcAudit.log('Emailed the rota to staff', done+' sent'+(failed?(', '+failed+' failed'):''));
+          toast('Rota emailed to '+done+' staff');
+        });
+      });
+      bar.appendChild(all); bar.appendChild(statusEl);
+      box.insertBefore(bar, box.firstChild);
+    }
     rota.publishedAt = Date.now(); saveRota(rota);
     if (window.ppcAudit) ppcAudit.log('Published the rota', 'week of ' + fmtDate(rota.weekStart));
     document.getElementById('rota-modal').classList.add('open');
