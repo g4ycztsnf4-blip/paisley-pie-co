@@ -13,8 +13,8 @@
    it's protected by the database's Row Level Security rules.
    ============================================================ */
 window.PPC_SUPABASE = {
-  url: "",       // e.g. "https://abcdefgh.supabase.co"
-  anonKey: ""    // e.g. "eyJhbGciOiJI...."  (the anon public key)
+  url: "https://wzmonkivlosnkoabdbpu.supabase.co",
+  anonKey: "sb_publishable_yqviBIL8DsBAabCEWcplxw_mFxQWVY0"   // publishable key — safe to expose; protected by RLS
 };
 
 /* Returns a ready Supabase client if configured, else null. */
