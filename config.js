@@ -14,7 +14,7 @@
    ============================================================ */
 window.PPC_SUPABASE = {
   url: "https://wzmonkivlosnkoabdbpu.supabase.co",
-  anonKey: "sb_publishable_yqviBIL8DsBAabCEWcplxw_mFxQWVY0"   // publishable key — safe to expose; protected by RLS
+  anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6bW9ua2l2bG9zbmtvYWJkYnB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4MDY3NzcsImV4cCI6MjA5NjM4Mjc3N30.D_Z8Q1_XZchfdPhyiER_lL-0kH1ZklFwLbp6UEasse8"   // anon public key — safe to expose; protected by RLS
 };
 
 /* Returns a ready Supabase client if configured, else null. */

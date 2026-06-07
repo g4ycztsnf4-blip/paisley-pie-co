@@ -461,11 +461,10 @@
     try {
       var sb = window.ppcCloud && window.ppcCloud();
       if (sb) {
-        sb.from('orders').insert({
+        sb.rpc('place_order', { payload: {
           ref: order.ref, mode: order.mode, customer: order.customer,
-          items: order.items, subtotal: order.subtotal, fee: order.fee,
-          total: order.total, status: 'New'
-        }).then(function (res) { if (res && res.error) console.warn('Cloud order failed:', res.error.message); });
+          items: order.items, subtotal: order.subtotal, fee: order.fee, total: order.total
+        }}).then(function (res) { if (res && res.error) console.warn('Cloud order failed:', res.error.message); });
       }
     } catch (e) { console.warn('Cloud order error', e); }
 
@@ -524,7 +523,7 @@
     } catch (err) {}
     try {
       var sb = window.ppcCloud && window.ppcCloud();
-      if (sb) sb.from('waitlist').insert({ email: email }).then(function (res) { if (res && res.error) console.warn('Cloud waitlist failed:', res.error.message); });
+      if (sb) sb.rpc('join_waitlist', { p_email: email }).then(function (res) { if (res && res.error) console.warn('Cloud waitlist failed:', res.error.message); });
     } catch (e) {}
     this.style.display = 'none';
     document.getElementById('waitlist-ok').style.display = 'block';
