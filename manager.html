@@ -128,6 +128,35 @@
     .lock-err { color:#ff6b6b; font-size:0.78rem; margin-top:0.75rem; min-height:1em; }
     .lock-box.shake { animation:shk 0.35s; }
     @keyframes shk { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+
+    /* ---- MOBILE ---- */
+    @media (max-width:640px) {
+      .topbar { padding:0.7rem 4vw; }
+      .topbar .brand small { display:none; }
+      .topbar .brand { font-size:1.25rem; }
+      .btn-sm { padding:0.4rem 0.6rem; font-size:0.64rem; }
+      .tabs { padding:0.85rem 4vw 0; gap:0.35rem; }
+      .tab { padding:0.55rem 0.8rem; font-size:0.7rem; }
+      .wrap { padding:1.25rem 4vw 4rem; }
+      .panel-head h2 { font-size:1.5rem; }
+      .row { grid-template-columns:1fr; }
+      .card { padding:1rem; }
+      /* team rows → stacked 2-up (placeholders act as labels) */
+      .worker { grid-template-columns:1fr 1fr; gap:0.5rem; align-items:start; }
+      .worker:first-child { display:none; }
+      .worker .x { grid-column:2; justify-self:end; }
+      /* rota shifts → stacked */
+      .shift { grid-template-columns:1fr 1fr; }
+      .shift select { grid-column:1 / -1; }
+      /* reports table scrolls instead of squishing */
+      #panel-reports .card { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+      table.rep { min-width:480px; }
+      .kpi strong { font-size:1.6rem; }
+      /* orders + send modal */
+      .order-actions { gap:0.45rem; }
+      .order-actions select { flex:1; }
+      .modal { padding:1.25rem; }
+    }
   </style>
 </head>
 <body>
