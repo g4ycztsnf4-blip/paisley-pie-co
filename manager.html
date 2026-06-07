@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root { --black:#000; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; --red:#a80f0f; --line:rgba(0,0,0,0.12); }
@@ -174,6 +176,7 @@
 <script>
 /* ---------------- LOGIN GATE (same accounts as admin) ---------------- */
 (function () {
+  if (window.ppcCloud && window.ppcCloud()) return; // cloud configured → Supabase Auth gate runs instead
   function sha256(str){ str = unescape(encodeURIComponent(str)); function rr(v,a){return (v>>>a)|(v<<(32-a));} var mp=Math.pow,maxWord=mp(2,32),result='',words=[],i,j; var bitLen=str.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[]; var pc=k.length,comp={}; for(var cand=2;pc<64;cand++){ if(!comp[cand]){ for(i=0;i<313;i+=cand)comp[i]=cand; hash[pc]=(mp(cand,.5)*maxWord)|0; k[pc++]=(mp(cand,1/3)*maxWord)|0; } } str+='\x80'; while(str.length%64-56)str+='\x00'; for(i=0;i<str.length;i++){ j=str.charCodeAt(i); if(j>>8)return ''; words[i>>2]|=j<<((3-i)%4)*8; } words[words.length]=(bitLen/maxWord)|0; words[words.length]=bitLen; for(j=0;j<words.length;){ var w=words.slice(j,j+=16),oldHash=hash; hash=hash.slice(0,8); for(i=0;i<64;i++){ var w15=w[i-15],w2=w[i-2]; var a=hash[0],e=hash[4]; var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0); var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2])); hash=[(t1+t2)|0].concat(hash); hash[4]=(hash[4]+t1)|0; } for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0; } for(i=0;i<8;i++)for(j=3;j+1;j--){ var b=(hash[i]>>(j*8))&255; result+=((b<16)?0:'')+b.toString(16);} return result; }
   var DEFAULT_HASH = sha256('paisleypie');
   var USERS_KEY = 'ppc_admin_users', SESSION_KEY = 'ppc_admin_user';
@@ -210,6 +213,42 @@
   });
 })();
 
+/* ---------------- SUPABASE AUTH GATE (used when config.js is set) ---------------- */
+(function () {
+  var sb = window.ppcCloud && window.ppcCloud();
+  if (!sb) return;
+  var EMAIL_DOMAIN = '@paisleypie.app';
+  var lock = document.getElementById('lock'), loginBox = document.getElementById('login-box'), changeBox = document.getElementById('change-box'), pendingSession = null;
+  function emailFor(u){ return String(u||'').toLowerCase().trim().replace(/@.*/,'') + EMAIL_DOMAIN; }
+  function nameFromEmail(e){ var u=(e||'').split('@')[0].replace(/\.admin$/,''); return u?u.charAt(0).toUpperCase()+u.slice(1):'Staff'; }
+  function shake(b){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+  function setCurrent(s){ var em=s.user.email; window.ppcCurrentUser=function(){ return { username:em.split('@')[0], name:nameFromEmail(em), email:em }; }; }
+  window.ppcLogout = function(){ sb.auth.signOut().then(function(){ location.reload(); }); };
+  function grant(s){ setCurrent(s); lock.classList.add('hidden'); if(typeof window.ppcOnLogin==='function') window.ppcOnLogin(window.ppcCurrentUser()); }
+  function mustChange(s){ try { return !!s.user.user_metadata.must_change; } catch(e){ return false; } }
+  function showChange(s){ pendingSession=s; document.getElementById('change-sub').textContent='Hi '+nameFromEmail(s.user.email)+" — first login, please choose your own password."; loginBox.style.display='none'; changeBox.style.display=''; lock.classList.remove('hidden'); document.getElementById('new-pw').focus(); }
+  sb.auth.getSession().then(function(res){ var s=res.data&&res.data.session; if(s){ if(mustChange(s)) showChange(s); else grant(s); } });
+  loginBox.addEventListener('submit', function(e){ e.preventDefault();
+    var email=emailFor(document.getElementById('login-user').value), pw=document.getElementById('login-pw').value, err=document.getElementById('login-err');
+    err.textContent='Signing in…';
+    sb.auth.signInWithPassword({ email:email, password:pw }).then(function(res){
+      if(res.error){ err.textContent='Wrong username or password.'; shake(loginBox); document.getElementById('login-pw').value=''; return; }
+      err.textContent=''; var s=res.data.session; if(mustChange(s)) showChange(s); else grant(s);
+    });
+  });
+  changeBox.addEventListener('submit', function(e){ e.preventDefault();
+    var p1=document.getElementById('new-pw').value, p2=document.getElementById('new-pw2').value, err=document.getElementById('change-err');
+    if(p1.length<6){ err.textContent='Password must be at least 6 characters.'; shake(changeBox); return; }
+    if(p1!==p2){ err.textContent='Passwords do not match.'; shake(changeBox); return; }
+    if(p1==='paisleypie'){ err.textContent='Please pick something other than the default.'; shake(changeBox); return; }
+    err.textContent='Saving…';
+    sb.auth.updateUser({ password:p1, data:{ must_change:false } }).then(function(res){
+      if(res.error){ err.textContent=res.error.message; shake(changeBox); return; }
+      sb.auth.getSession().then(function(r){ grant(r.data.session); });
+    });
+  });
+})();
+
 /* ---------------- MANAGER APP ---------------- */
 (function () {
   var TEAM_KEY = 'ppc_team', ROTA_KEY = 'ppc_rota';
@@ -221,16 +260,37 @@
   function money(n){ return '£'+Number(n||0).toFixed(2); }
   function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},2200); }
 
-  function loadTeam(){ try { return JSON.parse(localStorage.getItem(TEAM_KEY))||[]; } catch(e){ return []; } }
-  function saveTeam(t){ localStorage.setItem(TEAM_KEY, JSON.stringify(t)); }
-  function defaultRota(){ var r={ weekStart: nextMonday(), days:{} }; DAYS.forEach(function(d){ r.days[d]=[]; }); return r; }
-  function loadRota(){ try { var r=JSON.parse(localStorage.getItem(ROTA_KEY)); if(r&&r.days)return r; } catch(e){} return defaultRota(); }
-  function saveRota(r){ localStorage.setItem(ROTA_KEY, JSON.stringify(r)); }
+  function cloudSb(){ return (window.ppcCloud && window.ppcCloud()) || null; }
   function nextMonday(){ var d=new Date(); var day=d.getDay(); var add=(day===1)?0:((8-day)%7); d.setDate(d.getDate()+add); return d.toISOString().slice(0,10); }
+  function defaultRota(){ var r={ weekStart: nextMonday(), days:{} }; DAYS.forEach(function(d){ r.days[d]=[]; }); return r; }
   function fmtDate(iso){ try { return new Date(iso+'T00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); } catch(e){ return iso; } }
 
-  var team = loadTeam();
-  var rota = loadRota();
+  function loadTeamLocal(){ try { return JSON.parse(localStorage.getItem(TEAM_KEY))||[]; } catch(e){ return []; } }
+  function loadRotaLocal(){ try { var r=JSON.parse(localStorage.getItem(ROTA_KEY)); if(r&&r.days)return r; } catch(e){} return defaultRota(); }
+
+  var _saveTimers = {};
+  function cloudUpsert(id, data){
+    var sb=cloudSb(); if(!sb) return;
+    clearTimeout(_saveTimers[id]);
+    _saveTimers[id]=setTimeout(function(){
+      sb.from('manager_state').upsert({ id:id, data:data, updated_at:new Date().toISOString() }).then(function(res){ if(res&&res.error) console.warn('cloud save '+id, res.error.message); });
+    }, 500);
+  }
+  function saveTeam(t){ localStorage.setItem(TEAM_KEY, JSON.stringify(t)); cloudUpsert('team', t); }
+  function saveRota(r){ localStorage.setItem(ROTA_KEY, JSON.stringify(r)); cloudUpsert('rota', r); }
+  function loadCloudData(){
+    var sb=cloudSb(); if(!sb) return Promise.resolve(false);
+    return sb.from('manager_state').select('id,data').in('id',['team','rota']).then(function(res){
+      if(res.error){ console.warn(res.error.message); return false; }
+      var map={}; (res.data||[]).forEach(function(r){ map[r.id]=r.data; });
+      team = Array.isArray(map.team) ? map.team : [];
+      rota = (map.rota && map.rota.days) ? map.rota : defaultRota();
+      return true;
+    });
+  }
+
+  var team = [];
+  var rota = defaultRota();
 
   // ---------------- ROTA ----------------
   function renderRota() {
@@ -349,8 +409,20 @@
   function renderReports() {
     var panel = document.getElementById('panel-reports'); panel.innerHTML='';
     panel.appendChild(el('div','panel-head','<h2>Reports &amp; Staffing</h2>'));
+    var sb = cloudSb();
+    if (sb) {
+      panel.appendChild(el('div','empty','Loading…'));
+      sb.from('orders').select('total,created_at').then(function(res){
+        var all = (res.error ? [] : (res.data||[])).map(function(o){ return { total:o.total, ts:Date.parse(o.created_at) }; });
+        renderReportsBody(panel, all);
+      });
+    } else {
+      renderReportsBody(panel, (window.ppcOrders ? ppcOrders.list() : []));
+    }
+  }
 
-    var orders = (window.ppcOrders ? ppcOrders.list() : []);
+  function renderReportsBody(panel, orders) {
+    panel.innerHTML=''; panel.appendChild(el('div','panel-head','<h2>Reports &amp; Staffing</h2>'));
     var since = Date.now() - rangeDays*86400000;
     var inRange = orders.filter(function(o){ return o.ts >= since; });
 
@@ -458,10 +530,20 @@
   });
   function refreshWho(){ var u=(typeof window.ppcCurrentUser==='function')?ppcCurrentUser():null; document.getElementById('who').textContent = u?('👤 '+u.name):''; }
   document.getElementById('logout-btn').addEventListener('click',function(){ if(window.ppcLogout) ppcLogout(); });
-  window.ppcOnLogin = function(){ refreshWho(); };
+  window.ppcOnLogin = function(){
+    refreshWho();
+    if (cloudSb()) { loadCloudData().then(function(){ renderAll(); }); }
+    else { renderAll(); }
+  };
 
   function renderAll(){ renderRota(); renderTeam(); renderReports(); }
-  renderAll(); refreshWho();
+
+  if (cloudSb()) {
+    refreshWho(); // shared data loads + renders once signed in (ppcOnLogin)
+  } else {
+    team = loadTeamLocal(); rota = loadRotaLocal();
+    renderAll(); refreshWho();
+  }
 })();
 </script>
 </body>
