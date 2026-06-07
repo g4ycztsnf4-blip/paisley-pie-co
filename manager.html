@@ -455,6 +455,15 @@
     cr.appendChild(numField('Orders 1 staff handles /hr', capacity, function(v){ capacity=Math.max(1,v||12); renderReports(); }));
     cr.appendChild(numField('Target labour % of sales', targetLabour, function(v){ targetLabour=Math.max(5,v||30); renderReports(); }));
     ctl.appendChild(cr);
+    // Today's takings + CSV export
+    var t0=new Date(); t0.setHours(0,0,0,0); var todayStart=t0.getTime();
+    var todayOrders=orders.filter(function(o){ return o.ts>=todayStart; });
+    var todayRev=todayOrders.reduce(function(s,o){ return s+(o.total||0); },0);
+    var trow=el('div'); trow.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-top:1rem;padding-top:0.85rem;border-top:1px solid var(--line)';
+    trow.appendChild(el('div',null,'<strong>Today so far:</strong> '+todayOrders.length+' orders &middot; '+money(todayRev)));
+    var exp=el('button','btn btn-dark btn-sm','⬇ Export orders CSV'); exp.addEventListener('click', exportOrdersCSV);
+    trow.appendChild(exp);
+    ctl.appendChild(trow);
     panel.appendChild(ctl);
 
     if (!inRange.length) {
@@ -564,6 +573,16 @@
     var refresh = el('button','btn btn-light btn-sm','↻ Refresh');
     refresh.addEventListener('click', function(){ renderOrders(); updateOrdersBadge(); });
     bar.appendChild(refresh);
+    if (isCloud){
+      var al = el('button','btn btn-light btn-sm', alertsOn ? '🔔 Alerts on' : '🔕 Alerts off');
+      al.addEventListener('click', function(){
+        alertsOn = !alertsOn; localStorage.setItem('ppc_alerts_on', alertsOn ? '1' : '0');
+        if (alertsOn && window.Notification && Notification.permission === 'default') Notification.requestPermission();
+        beep(); // also confirms sound works
+        renderOrders();
+      });
+      bar.appendChild(al);
+    }
     if (!isCloud){
       var clr = el('button','btn btn-light btn-sm','Clear completed');
       clr.addEventListener('click', function(){ if(!confirm('Remove all completed orders?'))return; ppcOrders.list().forEach(function(o){ if((o.status||'New')==='Completed') ppcOrders.remove(o.ref); }); renderOrders(); updateOrdersBadge(); });
@@ -633,6 +652,9 @@
       }
     });
     act.appendChild(sel);
+    var pr = el('button','btn btn-light btn-sm','🖨 Print');
+    pr.addEventListener('click', function(){ printTicket(o); });
+    act.appendChild(pr);
     if (!isCloud){
       var del = el('button','btn btn-danger btn-sm','Delete');
       del.addEventListener('click', function(){ if(!confirm('Delete order '+o.ref+'?'))return; ppcOrders.remove(o.ref); renderOrders(); updateOrdersBadge(); });
@@ -640,6 +662,62 @@
     }
     card.appendChild(act);
     return card;
+  }
+
+  // ----- New-order alerts (sound + desktop notification + auto-refresh) -----
+  var _knownRefs = null, _pollTimer = null;
+  var alertsOn = (localStorage.getItem('ppc_alerts_on') !== '0');
+  function beep(){ try { var AC=window.AudioContext||window.webkitAudioContext; if(!AC)return; var ac=new AC(); var o=ac.createOscillator(), g=ac.createGain(); o.connect(g); g.connect(ac.destination); o.type='sine'; o.frequency.value=880; g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(0.3, ac.currentTime+0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime+0.5); o.start(); o.stop(ac.currentTime+0.55); } catch(e){} }
+  function notify(o){ try { if(window.Notification && Notification.permission==='granted'){ var c=o.customer||{}; new Notification('🥧 New order '+o.ref, { body:(c.name||'')+' · '+money(o.total)+' · '+(o.mode==='delivery'?'Delivery':'Collection') }); } } catch(e){} }
+  function startOrderPolling(){
+    var sb=cloudSb(); if(!sb) return;
+    clearInterval(_pollTimer);
+    function check(){
+      sb.from('orders').select('ref,created_at,status,total,mode,customer').order('created_at',{ascending:false}).limit(60).then(function(res){
+        if(res.error || !res.data) return;
+        var rows=res.data;
+        if(_knownRefs===null){ _knownRefs={}; rows.forEach(function(o){ _knownRefs[o.ref]=1; }); updateOrdersBadge(); return; }
+        var fresh=rows.filter(function(o){ return !_knownRefs[o.ref]; });
+        rows.forEach(function(o){ _knownRefs[o.ref]=1; });
+        if(fresh.length){
+          if(alertsOn){ beep(); fresh.forEach(notify); }
+          updateOrdersBadge();
+          var at=document.querySelector('.tab.active');
+          if(at && at.dataset.tab==='orders') renderOrders();
+        }
+      });
+    }
+    check();
+    _pollTimer=setInterval(check, 20000);
+  }
+
+  // ----- Kitchen ticket print -----
+  function printTicket(o){
+    var c=o.customer||{};
+    var items=(o.items||[]).map(function(it){ return '<tr><td>'+it.qty+'×</td><td>'+esc(it.name)+'</td><td style="text-align:right">'+money(it.line)+'</td></tr>'; }).join('');
+    var html='<html><head><title>'+esc(o.ref)+'</title><style>body{font-family:monospace;padding:8px;width:280px;color:#000}h2{margin:0 0 4px;font-size:16px}div{font-size:12px}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:2px 0;vertical-align:top}hr{border:none;border-top:1px dashed #000;margin:6px 0}.r{text-align:right}</style></head><body>'+
+      '<h2>PAISLEY PIE CO.</h2><div><b>'+esc(o.ref)+'</b> · '+(o.mode==='delivery'?'DELIVERY':'COLLECTION')+'</div><div>'+fmtTime(o.ts)+'</div><hr>'+
+      '<div><b>'+esc(c.name||'')+'</b> &nbsp; '+esc(c.phone||'')+'</div>'+(c.address?'<div>📍 '+esc(c.address)+'</div>':'')+(c.notes?'<div>📝 '+esc(c.notes)+'</div>':'')+'<hr>'+
+      '<table>'+items+'</table><hr><div class="r"><b>TOTAL '+money(o.total)+'</b></div>'+(o.fee?'<div class="r">incl '+money(o.fee)+' delivery</div>':'')+'<hr><div class="r">Thanks! 🥧</div>'+
+      '</body></html>';
+    var w=window.open('','_blank','width=320,height=640'); if(!w){ alert('Allow pop-ups to print tickets.'); return; }
+    w.document.write(html); w.document.close(); w.focus(); setTimeout(function(){ w.print(); }, 350);
+  }
+
+  // ----- CSV export -----
+  function csvEsc(s){ s=String(s==null?'':s); return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s; }
+  function ordersToCSV(rows){
+    var head=['Reference','Date','Type','Customer','Phone','Address','Items','Subtotal','Fee','Total','Status'];
+    var lines=[head.join(',')];
+    rows.forEach(function(o){ var c=o.customer||{}; var its=(o.items||[]).map(function(it){return it.qty+'x '+it.name;}).join('; ');
+      lines.push([o.ref, new Date(o.ts).toLocaleString('en-GB'), o.mode, c.name, c.phone, c.address, its, o.subtotal, o.fee, o.total, o.status].map(csvEsc).join(',')); });
+    return lines.join('\n');
+  }
+  function downloadFile(text, name, type){ var blob=new Blob([text],{type:type||'text/csv'}); var url=URL.createObjectURL(blob); var a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},1000); }
+  function exportOrdersCSV(){
+    var sb=cloudSb();
+    if(sb){ sb.from('orders').select('*').order('created_at',{ascending:false}).then(function(res){ if(res.error){alert(res.error.message);return;} var rows=(res.data||[]).map(function(o){ return { ref:o.ref, ts:Date.parse(o.created_at), mode:o.mode, customer:o.customer, items:o.items, subtotal:o.subtotal, fee:o.fee, total:o.total, status:o.status }; }); downloadFile(ordersToCSV(rows), 'paisley-orders-'+new Date().toISOString().slice(0,10)+'.csv'); toast('CSV downloaded'); }); }
+    else { downloadFile(ordersToCSV(window.ppcOrders?ppcOrders.list():[]), 'paisley-orders.csv'); toast('CSV downloaded'); }
   }
 
   // ---------------- shell ----------------
@@ -656,7 +734,7 @@
   document.getElementById('logout-btn').addEventListener('click',function(){ if(window.ppcLogout) ppcLogout(); });
   window.ppcOnLogin = function(){
     refreshWho();
-    if (cloudSb()) { loadCloudData().then(function(){ renderAll(); }); }
+    if (cloudSb()) { loadCloudData().then(function(){ renderAll(); startOrderPolling(); }); }
     else { renderAll(); }
   };
 
