@@ -290,7 +290,7 @@
     <p style="margin-top:0.75rem" id="modal-mode-line">Collect from 25 Causeyside St in ~15–20 min.</p>
     <div class="btn-row">
       <button class="b-light" id="modal-close">Keep Browsing</button>
-      <button class="b-dark" id="modal-home" onclick="location.href='index.html'">Back Home</button>
+      <a class="b-dark" id="modal-track" href="track.html" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Track My Order →</a>
     </div>
   </div>
 </div>
@@ -469,6 +469,7 @@
     } catch (e) { console.warn('Cloud order error', e); }
 
     document.getElementById('order-ref').textContent = ref;
+    document.getElementById('modal-track').href = 'track.html?ref=' + encodeURIComponent(ref);
     document.getElementById('modal-mode-line').textContent = mode === 'delivery'
       ? 'On its way to you within ~35–45 min.'
       : 'Collect from 25 Causeyside St in ~15–20 min.';

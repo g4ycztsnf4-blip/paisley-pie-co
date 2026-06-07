@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Track My Order — Paisley Pie Co.</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    :root { --black:#000; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; }
+    body { font-family:'Inter',sans-serif; background:var(--off); color:var(--black); line-height:1.6; }
+
+    nav { background:#000; border-bottom:3px solid #fff; display:flex; align-items:center; justify-content:space-between; padding:0 5vw; height:62px; position:sticky; top:0; z-index:100; }
+    .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:#fff; letter-spacing:0.06em; text-decoration:none; }
+    .nav-links { display:flex; gap:1.4rem; align-items:center; }
+    .nav-links a { color:rgba(255,255,255,0.55); text-decoration:none; font-size:0.8rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; transition:color 0.2s; }
+    .nav-links a:hover { color:#fff; }
+    .nav-cta { background:#fff; color:#000 !important; padding:0.45rem 1.1rem; border-radius:6px; }
+
+    .hero { background:#000; padding:4rem 5vw 3rem; }
+    .hero-inner { max-width:560px; margin:0 auto; }
+    .hero-label { font-size:0.7rem; font-weight:800; letter-spacing:0.15em; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:1rem; }
+    .hero h1 { font-family:'Bebas Neue',sans-serif; font-size:clamp(2.6rem,7vw,4rem); color:#fff; letter-spacing:0.03em; line-height:0.95; margin-bottom:0.75rem; }
+    .hero p { color:rgba(255,255,255,0.55); font-size:0.96rem; }
+
+    .wrap { max-width:560px; margin:0 auto; padding:2.5rem 5vw 5rem; }
+    .card { background:#fff; border:1.5px solid rgba(0,0,0,0.12); border-radius:16px; padding:1.75rem; }
+    .fld { display:flex; flex-direction:column; gap:0.35rem; margin-bottom:1rem; }
+    .fld label { font-size:0.68rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+    .fld input { border:1.5px solid rgba(0,0,0,0.2); border-radius:10px; padding:0.8rem 1rem; font-family:'Inter',sans-serif; font-size:0.95rem; }
+    .fld input:focus { outline:none; border-color:#000; }
+    .btn { width:100%; background:#000; color:#fff; border:none; border-radius:10px; padding:0.95rem; font-family:'Inter',sans-serif; font-weight:800; font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase; cursor:pointer; transition:opacity 0.15s; }
+    .btn:hover { opacity:0.85; }
+    .err { color:#a80f0f; font-size:0.85rem; margin-top:0.85rem; min-height:1em; text-align:center; }
+
+    .result { display:none; margin-top:1.5rem; }
+    .result.show { display:block; }
+    .result h2 { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:0.03em; margin-bottom:1.25rem; text-align:center; }
+    .steps { display:flex; flex-direction:column; gap:0; }
+    .step { display:flex; align-items:center; gap:0.9rem; padding:0.6rem 0; }
+    .dot { width:30px; height:30px; border-radius:50%; border:2px solid rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; font-size:0.9rem; flex-shrink:0; background:#fff; color:rgba(0,0,0,0.3); }
+    .step.done .dot { background:var(--green); border-color:var(--green); color:#fff; }
+    .step.current .dot { background:#000; border-color:#000; color:#fff; box-shadow:0 0 0 4px rgba(0,0,0,0.1); }
+    .step .lbl { font-weight:700; font-size:0.95rem; color:rgba(0,0,0,0.4); }
+    .step.done .lbl, .step.current .lbl { color:#000; }
+    .step .sub { font-size:0.78rem; color:var(--muted); font-weight:400; }
+    .connector { width:2px; height:14px; background:rgba(0,0,0,0.15); margin-left:14px; }
+    .connector.done { background:var(--green); }
+    .statusline { text-align:center; margin-top:1.25rem; font-size:0.9rem; color:var(--muted); }
+    .again { display:block; text-align:center; margin-top:1.25rem; font-size:0.85rem; color:#000; font-weight:700; cursor:pointer; background:none; border:none; width:100%; }
+
+    footer { background:#050403; border-top:2px solid #fff; padding:1.5rem 5vw; text-align:center; }
+    footer a { color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.82rem; }
+    footer a:hover { color:#fff; }
+    @media (max-width:600px){ .nav-links a:not(.nav-cta){ display:none; } }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">PAISLEY PIE CO.</a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="menu.html">Full Menu</a>
+    <a href="order.html" class="nav-cta">Order Online</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-label">Order updates</div>
+    <h1>TRACK MY ORDER</h1>
+    <p>Pop in your order reference and the phone number you used, and we'll show you how it's coming along.</p>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <form id="track-form">
+      <div class="fld">
+        <label>Order reference</label>
+        <input type="text" id="ref" placeholder="e.g. PPC-1234" autocomplete="off" required />
+      </div>
+      <div class="fld">
+        <label>Phone number</label>
+        <input type="tel" id="phone" placeholder="The number you ordered with" required />
+      </div>
+      <button type="submit" class="btn" id="track-btn">Track order</button>
+      <div class="err" id="err"></div>
+    </form>
+
+    <div class="result" id="result">
+      <h2 id="result-ref"></h2>
+      <div class="steps" id="steps"></div>
+      <div class="statusline" id="statusline"></div>
+      <button class="again" id="again">← Track another order</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html">← Back to Paisley Pie Co.</a>
+</footer>
+
+<script>
+  var STEPS = [
+    { key:'New',        label:'Order received',  sub:'We\'ve got your order' },
+    { key:'Preparing',  label:'Being made',      sub:'In the kitchen now' },
+    { key:'Ready',      label:'Ready',           sub:'Come and collect / on its way' },
+    { key:'Completed',  label:'Completed',       sub:'All done — enjoy! 🥧' }
+  ];
+
+  function showResult(ref, status) {
+    var idx = STEPS.findIndex(function(s){ return s.key === status; });
+    if (idx < 0) idx = 0;
+    document.getElementById('result-ref').textContent = ref.toUpperCase();
+    var html = '';
+    STEPS.forEach(function(s, i){
+      var cls = i < idx ? 'done' : (i === idx ? 'current' : '');
+      html += '<div class="step '+cls+'"><div class="dot">'+(i < idx ? '✓' : (i+1))+'</div>'+
+              '<div><div class="lbl">'+s.label+'</div><div class="sub">'+s.sub+'</div></div></div>';
+      if (i < STEPS.length-1) html += '<div class="connector '+(i < idx ? 'done':'')+'"></div>';
+    });
+    document.getElementById('steps').innerHTML = html;
+    document.getElementById('statusline').textContent = (status === 'Ready')
+      ? '🎉 Your order is ready!'
+      : (status === 'Completed' ? 'This order is complete.' : 'We\'ll keep this updated — refresh to see the latest.');
+    document.getElementById('track-form').style.display = 'none';
+    document.getElementById('result').classList.add('show');
+  }
+
+  document.getElementById('track-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var ref = document.getElementById('ref').value.trim();
+    var phone = document.getElementById('phone').value.trim();
+    var err = document.getElementById('err');
+    err.textContent = '';
+    var sb = window.ppcCloud && window.ppcCloud();
+    if (!sb) { err.textContent = 'Order tracking isn\'t available right now.'; return; }
+    var btn = document.getElementById('track-btn'); btn.disabled = true; btn.textContent = 'Checking…';
+    sb.rpc('track_order', { p_ref: ref, p_phone: phone }).then(function (res) {
+      btn.disabled = false; btn.textContent = 'Track order';
+      if (res.error) { err.textContent = 'Something went wrong — please try again.'; return; }
+      if (!res.data) { err.textContent = 'No order found with that reference and phone number. Double-check and try again.'; return; }
+      showResult(ref, res.data);
+    });
+  });
+
+  document.getElementById('again').addEventListener('click', function () {
+    document.getElementById('result').classList.remove('show');
+    document.getElementById('track-form').style.display = '';
+    document.getElementById('ref').value = ''; document.getElementById('phone').value = '';
+  });
+
+  // Prefill reference from ?ref= in the URL (used by the order confirmation link)
+  (function () {
+    var m = location.search.match(/[?&]ref=([^&]+)/);
+    if (m) document.getElementById('ref').value = decodeURIComponent(m[1]);
+  })();
+</script>
+</body>
+</html>
