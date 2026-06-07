@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
     :root { --black:#000; --off:#f8f6f2; --stone:#efefeb; --muted:#6a6560; --green:#1f7a3d; --red:#a80f0f; --line:rgba(0,0,0,0.12); }
@@ -174,6 +176,7 @@
    host the site somewhere with server-side login.
 --------------------------------------------------------------- */
 (function () {
+  if (window.ppcCloud && window.ppcCloud()) return; // cloud configured → real Supabase Auth gate runs instead (below)
   // Compact, self-contained SHA-256 (works on file:// too) — geraintluff/sha256, UTF-8 safe.
   function sha256(str) {
     str = unescape(encodeURIComponent(str)); // to UTF-8 bytes
@@ -293,6 +296,76 @@
     }
     saveUsers(users);
     grant(pendingUser);
+  });
+})();
+</script>
+
+<script>
+/* ---------------- SUPABASE AUTH GATE (used when config.js is set) ---------------- */
+(function () {
+  var sb = window.ppcCloud && window.ppcCloud();
+  if (!sb) return; // not configured → the client-side gate above handles login
+
+  var EMAIL_DOMAIN = '@paisleypie.app';
+  var lock = document.getElementById('lock');
+  var loginBox = document.getElementById('login-box');
+  var changeBox = document.getElementById('change-box');
+  var pendingSession = null;
+
+  function emailFor(username) { return String(username || '').toLowerCase().trim().replace(/@.*/, '') + EMAIL_DOMAIN; }
+  function nameFromEmail(e) { var u = (e || '').split('@')[0].replace(/\.admin$/, ''); return u ? u.charAt(0).toUpperCase() + u.slice(1) : 'Staff'; }
+  function shake(b) { b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); }
+  function setCurrent(session) {
+    var em = session.user.email;
+    window.ppcCurrentUser = function () { return { username: em.split('@')[0], name: nameFromEmail(em), email: em }; };
+  }
+  window.ppcLogout = function () { sb.auth.signOut().then(function () { location.reload(); }); };
+
+  function grant(session) {
+    setCurrent(session);
+    lock.classList.add('hidden');
+    if (typeof window.ppcOnLogin === 'function') window.ppcOnLogin(window.ppcCurrentUser());
+  }
+  function showChange(session) {
+    pendingSession = session;
+    document.getElementById('change-sub').textContent = 'Hi ' + nameFromEmail(session.user.email) + " — first login, please choose your own password.";
+    loginBox.style.display = 'none'; changeBox.style.display = ''; lock.classList.remove('hidden');
+    document.getElementById('new-pw').focus();
+  }
+  function mustChange(session) { try { return !!session.user.user_metadata.must_change; } catch (e) { return false; } }
+
+  // resume existing session
+  sb.auth.getSession().then(function (res) {
+    var s = res.data && res.data.session;
+    if (s) { if (mustChange(s)) showChange(s); else grant(s); }
+  });
+
+  loginBox.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = emailFor(document.getElementById('login-user').value);
+    var pw = document.getElementById('login-pw').value;
+    var err = document.getElementById('login-err');
+    err.textContent = 'Signing in…';
+    sb.auth.signInWithPassword({ email: email, password: pw }).then(function (res) {
+      if (res.error) { err.textContent = 'Wrong username or password.'; shake(loginBox); document.getElementById('login-pw').value = ''; return; }
+      err.textContent = '';
+      var s = res.data.session;
+      if (mustChange(s)) showChange(s); else grant(s);
+    });
+  });
+
+  changeBox.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var p1 = document.getElementById('new-pw').value, p2 = document.getElementById('new-pw2').value;
+    var err = document.getElementById('change-err');
+    if (p1.length < 6) { err.textContent = 'Password must be at least 6 characters.'; shake(changeBox); return; }
+    if (p1 !== p2) { err.textContent = 'Passwords do not match.'; shake(changeBox); return; }
+    if (p1 === 'paisleypie') { err.textContent = 'Please pick something other than the default.'; shake(changeBox); return; }
+    err.textContent = 'Saving…';
+    sb.auth.updateUser({ password: p1, data: { must_change: false } }).then(function (res) {
+      if (res.error) { err.textContent = res.error.message; shake(changeBox); return; }
+      sb.auth.getSession().then(function (r) { grant(r.data.session); });
+    });
   });
 })();
 </script>
@@ -799,39 +872,77 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]); }); }
   function fmtTime(ts){ try { return new Date(ts).toLocaleString('en-GB', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' }); } catch(e){ return ''; } }
 
+  function cloudSb() { return (window.ppcCloud && window.ppcCloud()) || null; }
+
   function updateOrdersBadge() {
-    var b = document.getElementById('orders-badge');
+    var b = document.getElementById('orders-badge'); if (!b) return;
+    var sb = cloudSb();
+    if (sb) {
+      sb.auth.getSession().then(function (r) {
+        if (!r.data || !r.data.session) { b.textContent = ''; return; }
+        sb.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'New')
+          .then(function (res) { b.textContent = res.count ? res.count : ''; });
+      });
+      return;
+    }
     var n = (window.ppcOrders ? ppcOrders.countNew() : 0);
-    if (b) b.textContent = n ? n : '';
+    b.textContent = n ? n : '';
+  }
+
+  function ordersToolbar(panel, total, newCount, isCloud) {
+    var bar = el('div', 'orders-toolbar');
+    bar.appendChild(el('div', 'orders-count', '<strong>' + total + '</strong> total &middot; <strong style="color:#a80f0f">' + newCount + '</strong> new' + (isCloud ? ' &middot; <span style="color:#1f7a3d">● live across devices</span>' : '')));
+    bar.appendChild(el('div', 'spacer'));
+    var refresh = el('button', 'btn btn-light btn-sm', '↻ Refresh');
+    refresh.addEventListener('click', function () { renderOrders(); updateOrdersBadge(); });
+    bar.appendChild(refresh);
+    if (!isCloud) {
+      var clr = el('button', 'btn btn-light btn-sm', 'Clear completed');
+      clr.addEventListener('click', function () {
+        if (!confirm('Remove all completed orders?')) return;
+        ppcOrders.list().forEach(function (o) { if ((o.status || 'New') === 'Completed') ppcOrders.remove(o.ref); });
+        renderOrders(); updateOrdersBadge();
+      });
+      bar.appendChild(clr);
+    }
+    panel.appendChild(bar);
   }
 
   function renderOrders() {
     var panel = document.getElementById('panel-orders'); panel.innerHTML = '';
     panel.appendChild(el('div', 'panel-head', '<h2>Orders</h2>'));
+    var sb = cloudSb();
+    if (sb) { renderOrdersCloud(panel, sb); return; }
 
     var orders = window.ppcOrders ? ppcOrders.list() : [];
-    var bar = el('div', 'orders-toolbar');
-    bar.appendChild(el('div', 'orders-count', '<strong>' + orders.length + '</strong> total &middot; <strong style="color:#a80f0f">' + (window.ppcOrders ? ppcOrders.countNew() : 0) + '</strong> new'));
-    bar.appendChild(el('div', 'spacer'));
-    var refresh = el('button', 'btn btn-light btn-sm', '↻ Refresh');
-    refresh.addEventListener('click', function(){ renderOrders(); updateOrdersBadge(); });
-    var clr = el('button', 'btn btn-light btn-sm', 'Clear completed');
-    clr.addEventListener('click', function(){
-      if (!confirm('Remove all completed orders?')) return;
-      ppcOrders.list().forEach(function(o){ if ((o.status||'New') === 'Completed') ppcOrders.remove(o.ref); });
-      renderOrders(); updateOrdersBadge();
-    });
-    bar.appendChild(refresh); bar.appendChild(clr);
-    panel.appendChild(bar);
-
+    ordersToolbar(panel, orders.length, (window.ppcOrders ? ppcOrders.countNew() : 0), false);
     if (!orders.length) {
       panel.appendChild(el('div', 'order-empty', '<span class="big">🧾</span>No orders yet.<br>Orders placed on this device will appear here.'));
       return;
     }
-    orders.forEach(function(o){ panel.appendChild(orderCard(o)); });
+    orders.forEach(function(o){ panel.appendChild(orderCard(o, false)); });
   }
 
-  function orderCard(o) {
+  function renderOrdersCloud(panel, sb) {
+    panel.appendChild(el('div', 'order-empty', 'Loading live orders…'));
+    sb.auth.getSession().then(function (r) {
+      var sess = r.data && r.data.session;
+      panel.innerHTML = ''; panel.appendChild(el('div', 'panel-head', '<h2>Orders</h2>'));
+      if (!sess) { panel.appendChild(el('div', 'order-empty', '<span class="big">🔒</span>Log in to view live orders.')); return; }
+      sb.from('orders').select('*').order('created_at', { ascending: false }).then(function (res) {
+        if (res.error) { panel.appendChild(el('div', 'order-empty', 'Could not load orders: ' + esc(res.error.message))); return; }
+        var rows = (res.data || []).map(function (o) {
+          return { ref: o.ref, ts: Date.parse(o.created_at), status: o.status || 'New', mode: o.mode, customer: o.customer, items: o.items, subtotal: o.subtotal, fee: o.fee, total: o.total };
+        });
+        var newCount = rows.filter(function (o) { return (o.status || 'New') === 'New'; }).length;
+        ordersToolbar(panel, rows.length, newCount, true);
+        if (!rows.length) { panel.appendChild(el('div', 'order-empty', '<span class="big">🧾</span>No orders yet.<br>New website orders appear here automatically.')); return; }
+        rows.forEach(function (o) { panel.appendChild(orderCard(o, true)); });
+      });
+    });
+  }
+
+  function orderCard(o, isCloud) {
     var status = o.status || 'New';
     var card = el('div', 'order' + (status === 'New' ? ' is-new' : ''));
     var top = el('div', 'order-top');
@@ -859,12 +970,27 @@
     var act = el('div', 'order-actions');
     act.appendChild(el('span', null, 'Status:'));
     var sel = el('select');
-    ppcOrders.STATUSES.forEach(function(s){ var op = el('option', null, s); op.value = s; if (s === status) op.selected = true; sel.appendChild(op); });
-    sel.addEventListener('change', function(){ ppcOrders.setStatus(o.ref, sel.value); if (window.ppcAudit) ppcAudit.log('Updated order ' + o.ref, '→ ' + sel.value); renderOrders(); updateOrdersBadge(); });
+    var STATUSES = (window.ppcOrders ? ppcOrders.STATUSES : ['New', 'Preparing', 'Ready', 'Completed']);
+    STATUSES.forEach(function(s){ var op = el('option', null, s); op.value = s; if (s === status) op.selected = true; sel.appendChild(op); });
+    sel.addEventListener('change', function(){
+      if (isCloud) {
+        cloudSb().from('orders').update({ status: sel.value }).eq('ref', o.ref).then(function (res) {
+          if (res.error) { alert('Could not update: ' + res.error.message); return; }
+          if (window.ppcAudit) ppcAudit.log('Updated order ' + o.ref, '→ ' + sel.value);
+          renderOrders(); updateOrdersBadge();
+        });
+      } else {
+        ppcOrders.setStatus(o.ref, sel.value);
+        if (window.ppcAudit) ppcAudit.log('Updated order ' + o.ref, '→ ' + sel.value);
+        renderOrders(); updateOrdersBadge();
+      }
+    });
     act.appendChild(sel);
-    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
-    del.addEventListener('click', function(){ if (!confirm('Delete order ' + o.ref + '?')) return; ppcOrders.remove(o.ref); renderOrders(); updateOrdersBadge(); });
-    act.appendChild(del);
+    if (!isCloud) {
+      var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+      del.addEventListener('click', function(){ if (!confirm('Delete order ' + o.ref + '?')) return; ppcOrders.remove(o.ref); renderOrders(); updateOrdersBadge(); });
+      act.appendChild(del);
+    }
     card.appendChild(act);
     return card;
   }
