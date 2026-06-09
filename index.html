@@ -9,6 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="Paisley Pie" />
+  <link rel="apple-touch-icon" href="logo.png" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -31,6 +38,7 @@
       background: var(--off);
       color: var(--black);
       line-height: 1.6;
+      padding-top: 62px; /* push all content below the fixed nav */
     }
 
     /* ─── NAV ─── */
@@ -70,7 +78,7 @@
 
     /* ─── HERO ─── */
     .hero {
-      min-height: 100vh; position: relative;
+      min-height: calc(100vh - 62px); position: relative;
       display: flex; align-items: flex-end; overflow: hidden;
     }
 
@@ -167,7 +175,7 @@
     }
 
     /* ─── SECTIONS ─── */
-    section { padding: 7rem 5vw; }
+    section { padding: 7rem 5vw; scroll-margin-top: 68px; }
 
     .label {
       display: inline-flex; align-items: center; gap: 0.5rem;
@@ -525,7 +533,7 @@
       .hamburger { display: flex; }
 
       /* Global section padding */
-      section { padding: 4rem 5vw; }
+      section { padding: 4rem 5vw; scroll-margin-top: 68px; }
 
       /* Hero */
       h1 { font-size: clamp(3.5rem, 14vw, 5rem); }
@@ -858,6 +866,22 @@
 </footer>
 
 <script>
+  // Service worker + install prompt
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function(){});
+  }
+  var _deferredInstall = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); _deferredInstall = e;
+    // Show a subtle "Add to home screen" link in the footer
+    var link = document.createElement('button');
+    link.textContent = '📲 Add to home screen';
+    link.style.cssText = 'background:transparent;border:1.5px solid rgba(250,249,247,0.25);color:rgba(250,249,247,0.55);border-radius:6px;padding:0.4rem 0.9rem;font-size:0.72rem;font-weight:700;cursor:pointer;margin-top:0.5rem;font-family:Inter,sans-serif;letter-spacing:0.05em;text-transform:uppercase;';
+    link.addEventListener('click', function(){ _deferredInstall.prompt(); });
+    var footer = document.querySelector('footer');
+    if(footer) footer.appendChild(link);
+  });
+
   // Hamburger menu
   const hamburger = document.getElementById('hamburger');
   const mobileMenu = document.getElementById('mobile-menu');

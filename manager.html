@@ -64,7 +64,7 @@
     .empty-day { color:var(--muted); font-size:0.82rem; padding:0.3rem 0; }
 
     /* worker rows */
-    .worker { display:grid; grid-template-columns:1.2fr 1.4fr 1fr 0.7fr auto; gap:0.6rem; align-items:center; margin-bottom:0.6rem; }
+    .worker { display:grid; grid-template-columns:1.2fr 1.4fr 1fr 0.7fr 0.5fr auto; gap:0.6rem; align-items:center; margin-bottom:0.6rem; }
     .worker input { border:1.5px solid var(--line); border-radius:8px; padding:0.5rem 0.6rem; font-family:'Inter',sans-serif; font-size:0.85rem; background:var(--off); }
     .worker .x { background:transparent; border:1.5px solid rgba(168,15,15,0.4); color:var(--red); border-radius:8px; cursor:pointer; font-weight:800; padding:0.4rem 0.65rem; }
 
@@ -142,9 +142,9 @@
       .row { grid-template-columns:1fr; }
       .card { padding:1rem; }
       /* team rows → stacked 2-up (placeholders act as labels) */
-      .worker { grid-template-columns:1fr 1fr; gap:0.5rem; align-items:start; }
+      .worker { grid-template-columns:1fr 1fr 60px auto; gap:0.5rem; align-items:start; }
       .worker:first-child { display:none; }
-      .worker .x { grid-column:2; justify-self:end; }
+      .worker .x { justify-self:end; }
       /* rota shifts → stacked */
       .shift { grid-template-columns:1fr 1fr; }
       .shift select { grid-column:1 / -1; }
@@ -187,6 +187,7 @@
   <div class="brand">PAISLEY PIE CO.<small>Manager Portal</small></div>
   <div class="topbar-actions">
     <span class="who" id="who"></span>
+    <a href="staff-app.html" class="btn btn-ghost btn-sm">Staff App →</a>
     <a href="admin.html" class="btn btn-ghost btn-sm">Website manager →</a>
     <button class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
   </div>
@@ -313,6 +314,60 @@
   function el(t,c,h){ var e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e; }
   function money(n){ return '£'+Number(n||0).toFixed(2); }
   function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},2200); }
+
+  /* ---- Order status emails ---- */
+  function sendStatusEmail(order, newStatus) {
+    if (!window.ppcEmailReady || !window.ppcEmailReady()) return;
+    var c = order.customer || {};
+    if (!c.email) return;
+    var name = c.name || 'there';
+    var ref  = order.ref || '';
+    var isDelivery = order.mode === 'delivery';
+    var base = window.location.href.replace(/manager\.html.*$/, '');
+    var trackUrl = base + 'track.html?ref=' + encodeURIComponent(ref);
+    var subject, body;
+
+    if (newStatus === 'Preparing') {
+      subject = 'Your order is being prepared — ' + ref;
+      body = 'Hi ' + name + '!\n\n' +
+             'Your order ' + ref + ' is now in the kitchen being prepared. 👨‍🍳\n\n' +
+             (isDelivery
+               ? 'We\'ll drop you another message as soon as it\'s on its way.'
+               : 'We\'ll ping you again the moment it\'s ready to collect.') +
+             '\n\nTrack your order: ' + trackUrl +
+             '\n\n— Paisley Pie Co.';
+
+    } else if (newStatus === 'Ready') {
+      if (isDelivery) {
+        subject = 'Your order is on its way! — ' + ref;
+        body = 'Hi ' + name + '! 🎉\n\n' +
+               'Your order ' + ref + ' has left the kitchen and is on its way to you. 🛵\n\n' +
+               'It should be with you very shortly — keep an eye out!\n\n' +
+               '— Paisley Pie Co.';
+      } else {
+        subject = 'Your order is ready to collect! — ' + ref;
+        body = 'Hi ' + name + '! 🎉\n\n' +
+               'Your order ' + ref + ' is ready and waiting for you at:\n\n' +
+               '  25 Causeyside St, Paisley\n\n' +
+               'Come and collect whenever you\'re ready — see you soon!\n\n' +
+               '— Paisley Pie Co.';
+      }
+
+    } else if (newStatus === 'Completed') {
+      subject = 'Thanks for your order — ' + ref;
+      body = 'Hi ' + name + '! 🥧\n\n' +
+             'Your order ' + ref + ' is all done. Thanks so much for ordering with Paisley Pie Co. — we hope you loved every bite!\n\n' +
+             'See you again soon.\n\n' +
+             '— Paisley Pie Co.';
+
+    } else {
+      return; // no email for 'New' (sent by order.html on placement)
+    }
+
+    window.ppcSendEmail(c.email, name, subject, body)
+      .then(function(){ toast('📧 Update emailed to ' + name); })
+      .catch(function(err){ console.warn('Status email failed', err); });
+  }
 
   function cloudSb(){ return (window.ppcCloud && window.ppcCloud()) || null; }
   function nextMonday(){ var d=new Date(); var day=d.getDay(); var add=(day===1)?0:((8-day)%7); d.setDate(d.getDate()+add); return d.toISOString().slice(0,10); }
@@ -465,7 +520,7 @@
 
     var card = el('div','card');
     var header = el('div','worker'); header.style.fontWeight='800'; header.style.fontSize='0.66rem'; header.style.textTransform='uppercase'; header.style.color='var(--muted)';
-    ['Name','Email','Phone','£/hr',''].forEach(function(h){ header.appendChild(el('div',null,h)); });
+    ['Name','Email','Phone','£/hr','PIN',''].forEach(function(h){ header.appendChild(el('div',null,h)); });
     card.appendChild(header);
     team.forEach(function(w){
       var row = el('div','worker');
@@ -473,12 +528,14 @@
       var e=el('input'); e.type='email'; e.placeholder='email@…'; e.value=w.email||''; e.addEventListener('input',function(){ w.email=e.value; saveTeam(team); });
       var p=el('input'); p.type='tel'; p.placeholder='07…'; p.value=w.phone||''; p.addEventListener('input',function(){ w.phone=p.value; saveTeam(team); });
       var rt=el('input'); rt.type='number'; rt.step='0.10'; rt.value=w.rate!=null?w.rate:''; rt.addEventListener('input',function(){ w.rate=parseFloat(rt.value)||0; saveTeam(team); });
+      var pi=el('input'); pi.type='text'; pi.inputMode='numeric'; pi.maxLength=6; pi.placeholder='PIN'; pi.style.width='70px'; pi.value=w.pin||''; pi.title='Staff app login PIN (set by manager)'; pi.addEventListener('input',function(){ w.pin=pi.value.trim(); saveTeam(team); });
       var x=el('button','x','✕'); x.addEventListener('click',function(){ if(!confirm('Remove '+(w.name||'this person')+'?'))return; team=team.filter(function(t){return t!==w;}); saveTeam(team); if(window.ppcAudit)ppcAudit.log('Removed a team member', w.name); renderTeam(); });
-      row.appendChild(n); row.appendChild(e); row.appendChild(p); row.appendChild(rt); row.appendChild(x);
+      row.appendChild(n); row.appendChild(e); row.appendChild(p); row.appendChild(rt); row.appendChild(pi); row.appendChild(x);
       card.appendChild(row);
     });
     panel.appendChild(card);
     panel.appendChild(el('div','hint','£/hr is used for the staffing-cost estimate in Reports. Default is the current UK adult minimum wage — adjust as needed.'));
+    panel.appendChild(el('div','hint','PIN is what each staff member uses to log into the Staff App (<a href="staff-app.html" style="color:#000;font-weight:700">staff-app.html</a>). Set any number (4–6 digits) and share it with them privately.'));
   }
 
   // ---------------- REPORTS & STAFFING ----------------
@@ -701,11 +758,13 @@
         cloudSb().from('orders').update({ status:sel.value }).eq('ref', o.ref).then(function(res){
           if(res.error){ alert('Could not update: '+res.error.message); return; }
           if(window.ppcAudit) ppcAudit.log('Updated order '+o.ref, '→ '+sel.value);
+          sendStatusEmail(o, sel.value);
           renderOrders(); updateOrdersBadge();
         });
       } else {
         ppcOrders.setStatus(o.ref, sel.value);
         if(window.ppcAudit) ppcAudit.log('Updated order '+o.ref, '→ '+sel.value);
+        sendStatusEmail(o, sel.value);
         renderOrders(); updateOrdersBadge();
       }
     });

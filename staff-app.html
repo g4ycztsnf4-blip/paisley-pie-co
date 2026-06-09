@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Paisley Pie Co. — Staff App</title>
+  <meta name="theme-color" content="#000000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="PPC Staff" />
+  <link rel="apple-touch-icon" href="logo.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black: #000; --off: #f8f6f2; --stone: #efefeb; --muted: #6a6560;
+      --green: #1f7a3d; --red: #a80f0f; --line: rgba(0,0,0,0.1);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', sans-serif; background: var(--off); color: var(--black); line-height: 1.5; overflow-x: hidden; }
+    .hidden { display: none !important; }
+
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: #000; color: #fff; padding: 0.75rem 1.25rem;
+      align-items: center; gap: 0.75rem; font-size: 0.82rem;
+    }
+    .install-banner.show { display: flex; }
+    .install-banner span { flex: 1; }
+    .install-banner button { background: #fff; color: #000; border: none; border-radius: 6px; padding: 0.4rem 0.9rem; font-weight: 800; font-size: 0.75rem; cursor: pointer; }
+    .install-banner .ib-close { background: transparent; color: rgba(255,255,255,0.5); padding: 0.4rem; font-size: 1.1rem; }
+
+    /* ── LOGIN SCREEN ── */
+    #screen-login {
+      min-height: 100vh; background: #000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 2rem 6vw; text-align: center;
+    }
+    .login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; color: #fff; letter-spacing: 0.06em; margin-bottom: 0.25rem; }
+    .login-sub { font-size: 0.72rem; color: rgba(255,255,255,0.35); letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 2.5rem; }
+    .login-card { background: #111; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 18px; padding: 1.75rem; width: 100%; max-width: 380px; text-align: left; }
+    .login-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; color: #fff; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .login-card p { color: rgba(255,255,255,0.4); font-size: 0.78rem; margin-bottom: 1.5rem; }
+    .login-toggle { display: flex; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 3px; margin-bottom: 1.25rem; gap: 3px; }
+    .login-toggle button { flex: 1; background: transparent; border: none; color: rgba(255,255,255,0.5); border-radius: 8px; padding: 0.6rem; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.76rem; cursor: pointer; transition: all 0.15s; }
+    .login-toggle button.active { background: #fff; color: #000; }
+    .lf { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+    .lf label { font-size: 0.63rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.4); }
+    .lf input, .lf select { background: #000; border: 1.5px solid rgba(255,255,255,0.15); border-radius: 9px; color: #fff; padding: 0.75rem 0.9rem; font-family: 'Inter', sans-serif; font-size: 0.9rem; width: 100%; }
+    .lf input:focus, .lf select:focus { outline: none; border-color: #fff; }
+    .lf select option { background: #111; }
+    .login-btn { width: 100%; background: #fff; color: #000; border: none; border-radius: 10px; padding: 0.9rem; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; margin-top: 0.25rem; }
+    .login-btn:hover { background: #ddd; }
+    .login-err { color: #ff6b6b; font-size: 0.78rem; margin-top: 0.75rem; min-height: 1em; text-align: center; }
+
+    /* ── APP SHELL (after login) ── */
+    #screen-app { display: flex; flex-direction: column; min-height: 100vh; }
+
+    .app-topbar {
+      background: #000; color: #fff; position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5vw; height: 56px; border-bottom: 2px solid #fff;
+      padding-top: var(--safe-top);
+    }
+    .app-topbar .brand { font-family: 'Bebas Neue', sans-serif; font-size: 1.35rem; letter-spacing: 0.05em; }
+    .app-topbar .right { display: flex; align-items: center; gap: 0.75rem; }
+    .app-topbar .who { font-size: 0.7rem; color: rgba(255,255,255,0.5); font-weight: 700; }
+    .icon-btn { background: transparent; border: none; color: rgba(255,255,255,0.6); font-size: 1.25rem; cursor: pointer; padding: 4px; }
+    .icon-btn:hover { color: #fff; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+      background: #000; border-top: 2px solid #fff;
+      display: flex; padding-bottom: var(--safe-bottom);
+    }
+    .bottom-nav a, .bottom-nav button {
+      flex: 1; background: none; border: none; color: rgba(255,255,255,0.45);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 0.6rem 0.25rem; cursor: pointer; text-decoration: none;
+      font-family: 'Inter', sans-serif; font-size: 0.58rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase; transition: color 0.15s;
+    }
+    .bottom-nav a.active, .bottom-nav button.active { color: #fff; }
+    .bottom-nav .nav-icon { font-size: 1.35rem; line-height: 1; }
+    .bottom-nav .badge { background: #a80f0f; color: #fff; border-radius: 999px; font-size: 0.55rem; padding: 0 5px; min-width: 16px; text-align: center; position: absolute; top: 6px; right: calc(50% - 24px); }
+
+    /* ── PAGE CONTENT ── */
+    .page-scroll { flex: 1; overflow-y: auto; padding: 1.25rem 5vw 100px; }
+
+    /* ── MY ROTA (staff view) ── */
+    .greeting { margin-bottom: 1.5rem; }
+    .greeting h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; letter-spacing: 0.03em; line-height: 1; }
+    .greeting p { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+
+    .week-label { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.03em; margin: 1.25rem 0 0.6rem; padding-bottom: 0.4rem; border-bottom: 2px solid #000; }
+    .shift-card {
+      background: #fff; border: 1.5px solid var(--line); border-radius: 14px;
+      padding: 1rem 1.2rem; margin-bottom: 0.6rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .shift-card.today { border-color: #000; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
+    .shift-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+    .shift-card.today .shift-dot { background: var(--green); }
+    .shift-info { flex: 1; }
+    .shift-day { font-weight: 800; font-size: 0.9rem; }
+    .shift-time { font-size: 0.82rem; color: var(--muted); margin-top: 0.1rem; }
+    .shift-hrs { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 0.02em; }
+    .total-bar { background: #000; color: #fff; border-radius: 12px; padding: 0.9rem 1.2rem; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .total-bar strong { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.02em; }
+    .total-bar span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.5); }
+
+    .no-shifts { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: 0.9rem; }
+    .no-shifts .big { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+    /* ── NOTIFICATIONS PAGE ── */
+    .notif-card { background: #fff; border: 1.5px solid var(--line); border-radius: 14px; padding: 1.25rem; margin-bottom: 1rem; }
+    .notif-card h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; letter-spacing: 0.03em; margin-bottom: 0.35rem; }
+    .notif-card p { font-size: 0.84rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.55; }
+    .big-btn { width: 100%; background: #000; color: #fff; border: none; border-radius: 10px; padding: 0.9rem; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; margin-bottom: 0.6rem; }
+    .big-btn:hover { opacity: 0.85; }
+    .big-btn.green { background: var(--green); }
+    .big-btn.light { background: var(--stone); color: #000; }
+    .status-pill { display: inline-block; border-radius: 999px; padding: 0.2rem 0.75rem; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+    .status-pill.on { background: #d4edda; color: #1f7a3d; }
+    .status-pill.off { background: var(--stone); color: var(--muted); }
+
+    /* ── MANAGER QUICK VIEW ── */
+    .mgr-hero { background: #000; color: #fff; border-radius: 14px; padding: 1.5rem; margin-bottom: 1rem; }
+    .mgr-hero h2 { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; letter-spacing: 0.03em; margin-bottom: 0.4rem; }
+    .mgr-hero p { font-size: 0.84rem; color: rgba(255,255,255,0.55); margin-bottom: 1.25rem; }
+    .mgr-links { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .mgr-link { background: #fff; color: #000; border-radius: 12px; padding: 1.1rem; text-decoration: none; display: flex; flex-direction: column; gap: 0.3rem; transition: opacity 0.15s; }
+    .mgr-link:hover { opacity: 0.85; }
+    .mgr-link .ml-icon { font-size: 1.6rem; }
+    .mgr-link .ml-label { font-weight: 800; font-size: 0.82rem; letter-spacing: 0.03em; }
+    .mgr-link .ml-sub { font-size: 0.7rem; color: var(--muted); }
+    .mgr-badge { background: #a80f0f; color: #fff; border-radius: 999px; font-size: 0.6rem; font-weight: 800; padding: 0.1rem 0.45rem; margin-left: 0.3rem; vertical-align: middle; }
+    .mgr-badge:empty { display: none; }
+
+    /* ── TOAST ── */
+    .toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%) translateY(150%); background: #000; color: #fff; padding: 0.75rem 1.4rem; border-radius: 10px; font-weight: 700; font-size: 0.82rem; z-index: 500; transition: transform 0.3s; white-space: nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ── INSTALL BANNER ── -->
+<div class="install-banner" id="install-banner">
+  <span>📲 Add Paisley Pie Co. to your home screen</span>
+  <button id="install-btn">Install</button>
+  <button class="ib-close" id="install-close">✕</button>
+</div>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div id="screen-login">
+  <div class="login-logo">🥧 PAISLEY PIE CO.</div>
+  <div class="login-sub">Staff Portal</div>
+
+  <div class="login-card">
+    <h2>Sign in</h2>
+    <p>Staff: pick your name &amp; enter your PIN. Managers: use your manager login.</p>
+
+    <!-- Toggle: Staff / Manager -->
+    <div class="login-toggle">
+      <button id="toggle-staff" class="active" onclick="setMode('staff')">👷 Staff</button>
+      <button id="toggle-mgr"   onclick="setMode('manager')">🔑 Manager</button>
+    </div>
+
+    <!-- Staff login -->
+    <div id="form-staff">
+      <div class="lf">
+        <label>Your name</label>
+        <select id="staff-name"><option value="">— select your name —</option></select>
+      </div>
+      <div class="lf">
+        <label>PIN</label>
+        <input type="password" id="staff-pin" inputmode="numeric" placeholder="4-digit PIN" maxlength="6" autocomplete="current-password" />
+      </div>
+    </div>
+
+    <!-- Manager login -->
+    <div id="form-manager" class="hidden">
+      <div class="lf">
+        <label>Username</label>
+        <input type="text" id="mgr-user" placeholder="e.g. chloe.admin" autocomplete="username" />
+      </div>
+      <div class="lf">
+        <label>Password</label>
+        <input type="password" id="mgr-pw" placeholder="Password" autocomplete="current-password" />
+      </div>
+    </div>
+
+    <button class="login-btn" id="login-btn">Sign in →</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     APP (post-login)
+══════════════════════════════════════ -->
+<div id="screen-app" class="hidden">
+
+  <header class="app-topbar">
+    <span class="brand">PAISLEY PIE CO.</span>
+    <div class="right">
+      <span class="who" id="topbar-who"></span>
+      <button class="icon-btn" id="logout-btn" title="Log out">⏻</button>
+    </div>
+  </header>
+
+  <div class="page-scroll" id="page-scroll">
+
+    <!-- ── STAFF: My Rota ── -->
+    <div id="tab-rota">
+      <div class="greeting">
+        <h1 id="greeting-name">Hi there!</h1>
+        <p id="greeting-sub">Here are your upcoming shifts.</p>
+      </div>
+      <div id="rota-content"></div>
+    </div>
+
+    <!-- ── STAFF: Notifications ── -->
+    <div id="tab-notifs" class="hidden">
+      <div class="greeting"><h1>Notifications</h1><p>Get alerts when your rota is updated.</p></div>
+      <div class="notif-card">
+        <h3>Push Alerts</h3>
+        <p>Turn these on to be notified when your rota is published or updated by the manager.</p>
+        <div id="notif-status" style="margin-bottom:0.75rem"></div>
+        <button class="big-btn green" id="notif-enable-btn">Enable notifications</button>
+        <button class="big-btn light hidden" id="notif-disable-btn">Notifications enabled ✓</button>
+        <p style="font-size:0.72rem;color:var(--muted);margin-top:0.5rem" id="notif-note"></p>
+      </div>
+    </div>
+
+    <!-- ── MANAGER: Quick Panel ── -->
+    <div id="tab-manager" class="hidden">
+      <div class="greeting"><h1 id="mgr-greeting">Manager Panel</h1><p>Quick access — tap any card to open the full view.</p></div>
+      <div class="mgr-hero">
+        <h2>FULL PORTAL →</h2>
+        <p>The complete manager experience — orders, rota builder, team management, reports &amp; staffing.</p>
+        <a href="manager.html" class="big-btn" style="display:block;text-align:center;text-decoration:none;padding:0.85rem">Open Manager Portal</a>
+      </div>
+      <div class="mgr-links">
+        <a href="manager.html#orders" class="mgr-link">
+          <span class="ml-icon">📋</span>
+          <span class="ml-label">Orders <span class="mgr-badge" id="mgr-orders-badge"></span></span>
+          <span class="ml-sub">View &amp; update live orders</span>
+        </a>
+        <a href="manager.html#rota" class="mgr-link">
+          <span class="ml-icon">📅</span>
+          <span class="ml-label">Rota</span>
+          <span class="ml-sub">Build the week's rota</span>
+        </a>
+        <a href="manager.html#team" class="mgr-link">
+          <span class="ml-icon">👥</span>
+          <span class="ml-label">Team</span>
+          <span class="ml-sub">Manage staff &amp; PINs</span>
+        </a>
+        <a href="manager.html#reports" class="mgr-link">
+          <span class="ml-icon">📊</span>
+          <span class="ml-label">Reports</span>
+          <span class="ml-sub">Sales &amp; staffing data</span>
+        </a>
+      </div>
+    </div>
+
+  </div><!-- /page-scroll -->
+
+  <!-- ── BOTTOM NAV (staff) ── -->
+  <nav class="bottom-nav" id="bottom-nav-staff">
+    <button class="active" id="btn-rota"   onclick="showTab('rota')"><span class="nav-icon">📅</span>My Rota</button>
+    <button           id="btn-notifs" onclick="showTab('notifs')"><span class="nav-icon">🔔</span>Alerts</button>
+    <a href="order.html"><span class="nav-icon">🥧</span>Order</a>
+    <a href="track.html"><span class="nav-icon">📍</span>Track</a>
+  </nav>
+
+  <!-- ── BOTTOM NAV (manager) ── -->
+  <nav class="bottom-nav hidden" id="bottom-nav-manager">
+    <button class="active" id="btn-manager-home" onclick="showTab('manager')"><span class="nav-icon">⚡</span>Quick</button>
+    <a href="manager.html"><span class="nav-icon">📋</span>Full Portal</a>
+    <a href="order.html"><span class="nav-icon">🥧</span>Order</a>
+    <a href="index.html"><span class="nav-icon">🏠</span>Website</a>
+  </nav>
+
+</div><!-- /screen-app -->
+
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+/* ══════════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════════ */
+function cloudSb(){ return (window.ppcCloud && window.ppcCloud()) || null; }
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._tt); t._tt=setTimeout(function(){ t.classList.remove('show'); }, 2500); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]);}); }
+
+var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var DAYFULL = { Mon:'Monday', Tue:'Tuesday', Wed:'Wednesday', Thu:'Thursday', Fri:'Friday', Sat:'Saturday', Sun:'Sunday' };
+
+function toMin(t){ var p=(t||'00:00').split(':'); return (+p[0])*60+(+p[1]||0); }
+function shiftHrs(sh){ var d=toMin(sh.end)-toMin(sh.start); return d>0?d/60:0; }
+function fmtDate(iso){
+  try { return new Date(iso+'T00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); } catch(e){ return iso; }
+}
+
+/* ══════════════════════════════════════════════
+   AUTH — SHA-256 (same implementation as manager.html)
+══════════════════════════════════════════════ */
+function sha256(str){
+  str=unescape(encodeURIComponent(str));
+  function rr(v,a){return(v>>>a)|(v<<(32-a));}
+  var mp=Math.pow,maxWord=mp(2,32),result='',words=[],i,j;
+  var bitLen=str.length*8,hash=sha256.h=sha256.h||[],k=sha256.k=sha256.k||[];
+  var pc=k.length,comp={};
+  for(var cand=2;pc<64;cand++){if(!comp[cand]){for(i=0;i<313;i+=cand)comp[i]=cand;hash[pc]=(mp(cand,.5)*maxWord)|0;k[pc++]=(mp(cand,1/3)*maxWord)|0;}}
+  str+='\x80';while(str.length%64-56)str+='\x00';
+  for(i=0;i<str.length;i++){j=str.charCodeAt(i);if(j>>8)return'';words[i>>2]|=j<<((3-i)%4)*8;}
+  words[words.length]=(bitLen/maxWord)|0;words[words.length]=bitLen;
+  for(j=0;j<words.length;){var w=words.slice(j,j+=16),oldHash=hash;hash=hash.slice(0,8);
+    for(i=0;i<64;i++){var w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4];
+      var t1=hash[7]+(rr(e,6)^rr(e,11)^rr(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:(w[i-16]+(rr(w15,7)^rr(w15,18)^(w15>>>3))+w[i-7]+(rr(w2,17)^rr(w2,19)^(w2>>>10)))|0);
+      var t2=(rr(a,2)^rr(a,13)^rr(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));
+      hash=[(t1+t2)|0].concat(hash);hash[4]=(hash[4]+t1)|0;}
+    for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0;}
+  for(i=0;i<8;i++)for(j=3;j+1;j--){var b=(hash[i]>>(j*8))&255;result+=((b<16)?0:'')+b.toString(16);}
+  return result;
+}
+
+var DEFAULT_HASH = sha256('paisleypie');
+var USERS_KEY  = 'ppc_admin_users';
+var TEAM_KEY   = 'ppc_team';
+var ROTA_KEY   = 'ppc_rota';
+var SESSION_KEY = 'ppc_staff_session'; // { type: 'staff'|'manager', id, name }
+
+/* Manager accounts (mirrors manager.html) */
+var SEED_MANAGERS = [
+  { username:'chloe.admin',   name:'Chloe',   hash:DEFAULT_HASH, mustChange:false },
+  { username:'michael.admin', name:'Michael', hash:DEFAULT_HASH, mustChange:false },
+  { username:'scott.admin',   name:'Scott',   hash:DEFAULT_HASH, mustChange:false }
+];
+function loadManagers(){
+  try{ var u=JSON.parse(localStorage.getItem(USERS_KEY)); if(u&&u.length) return u; }catch(e){}
+  return JSON.parse(JSON.stringify(SEED_MANAGERS));
+}
+function findManager(n){ n=(n||'').toLowerCase().trim(); return loadManagers().filter(function(x){return x.username===n;})[0]||null; }
+
+function loadTeam(){
+  try{ return JSON.parse(localStorage.getItem(TEAM_KEY))||[]; }catch(e){ return []; }
+}
+function loadRota(){
+  try{ var r=JSON.parse(localStorage.getItem(ROTA_KEY)); if(r&&r.days) return r; }catch(e){}
+  return null;
+}
+
+/* ══════════════════════════════════════════════
+   LOGIN MODE TOGGLE
+══════════════════════════════════════════════ */
+var currentMode = 'staff';
+function setMode(m){
+  currentMode = m;
+  document.getElementById('toggle-staff').classList.toggle('active', m==='staff');
+  document.getElementById('toggle-mgr').classList.toggle('active',   m==='manager');
+  document.getElementById('form-staff').classList.toggle('hidden',   m!=='staff');
+  document.getElementById('form-manager').classList.toggle('hidden', m!=='manager');
+  document.getElementById('login-err').textContent = '';
+}
+
+/* Populate staff name dropdown */
+function populateStaffDropdown(team){
+  var sel = document.getElementById('staff-name');
+  var existing = sel.innerHTML;
+  sel.innerHTML = '<option value="">— select your name —</option>';
+  (team||[]).forEach(function(w){
+    if(!w.name) return;
+    var o = document.createElement('option');
+    o.value = w.id; o.textContent = w.name;
+    sel.appendChild(o);
+  });
+}
+
+/* Load team (from cloud if configured, else localStorage) */
+function initTeamDropdown(){
+  var sb = cloudSb();
+  if(sb){
+    sb.from('manager_state').select('data').eq('id','team').then(function(res){
+      var team = (res.data&&res.data[0]) ? res.data[0].data : [];
+      populateStaffDropdown(Array.isArray(team)?team:[]);
+    });
+  } else {
+    populateStaffDropdown(loadTeam());
+  }
+}
+initTeamDropdown();
+
+/* ══════════════════════════════════════════════
+   DO LOGIN
+══════════════════════════════════════════════ */
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('staff-pin').addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('mgr-pw').addEventListener('keydown',   function(e){ if(e.key==='Enter') doLogin(); });
+
+function doLogin(){
+  var err = document.getElementById('login-err');
+  err.textContent = '';
+
+  if(currentMode === 'manager'){
+    /* ── Manager auth (sha256, same as manager.html) ── */
+    var uname = document.getElementById('mgr-user').value.trim();
+    var pw    = document.getElementById('mgr-pw').value;
+    var mgr = findManager(uname);
+    if(!mgr || sha256(pw) !== mgr.hash){ err.textContent = 'Wrong username or password.'; return; }
+    var session = { type:'manager', id: mgr.username, name: mgr.name };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    openApp(session);
+
+  } else {
+    /* ── Staff auth (name + PIN) ── */
+    var workerId = document.getElementById('staff-name').value;
+    var pin      = document.getElementById('staff-pin').value.trim();
+    if(!workerId){ err.textContent = 'Please select your name.'; return; }
+    if(!pin)     { err.textContent = 'Please enter your PIN.'; return; }
+
+    function tryAuth(team){
+      var worker = (team||[]).filter(function(w){ return w.id === workerId; })[0];
+      if(!worker){ err.textContent = 'Could not find your account. Ask your manager.'; return; }
+      if(!worker.pin){ err.textContent = 'No PIN set for your account yet. Ask your manager to set one in the Team tab.'; return; }
+      if(String(worker.pin).trim() !== String(pin).trim()){ err.textContent = 'Wrong PIN — try again.'; return; }
+      var session = { type:'staff', id: worker.id, name: worker.name };
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      openApp(session);
+    }
+
+    var sb = cloudSb();
+    if(sb){
+      sb.from('manager_state').select('data').eq('id','team').then(function(res){
+        var team = (res.data&&res.data[0]) ? res.data[0].data : [];
+        tryAuth(Array.isArray(team)?team:[]);
+      });
+    } else {
+      tryAuth(loadTeam());
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════
+   OPEN APP (post-login)
+══════════════════════════════════════════════ */
+function openApp(session){
+  document.getElementById('screen-login').classList.add('hidden');
+  document.getElementById('screen-app').classList.remove('hidden');
+  document.getElementById('topbar-who').textContent = '👤 ' + session.name;
+
+  if(session.type === 'manager'){
+    document.getElementById('mgr-greeting').textContent = 'Hi ' + session.name + '! 👋';
+    document.getElementById('tab-rota').classList.add('hidden');
+    document.getElementById('tab-notifs').classList.add('hidden');
+    document.getElementById('tab-manager').classList.remove('hidden');
+    document.getElementById('bottom-nav-staff').classList.add('hidden');
+    document.getElementById('bottom-nav-manager').classList.remove('hidden');
+    loadManagerBadge();
+  } else {
+    document.getElementById('greeting-name').textContent = 'Hi ' + session.name + '! 👋';
+    loadMyRota(session.id);
+    setupNotifUI();
+  }
+}
+
+/* Resume session on reload */
+(function(){
+  try{
+    var s = sessionStorage.getItem(SESSION_KEY);
+    if(s) openApp(JSON.parse(s));
+  }catch(e){}
+})();
+
+/* Logout */
+document.getElementById('logout-btn').addEventListener('click', function(){
+  sessionStorage.removeItem(SESSION_KEY);
+  location.reload();
+});
+
+/* ══════════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════════ */
+function showTab(tab){
+  ['rota','notifs','manager'].forEach(function(t){
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  });
+  ['btn-rota','btn-notifs','btn-manager-home'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.classList.remove('active');
+  });
+  var active = document.getElementById('btn-'+tab) || document.getElementById('btn-manager-home');
+  if(active) active.classList.add('active');
+  document.getElementById('page-scroll').scrollTop = 0;
+}
+
+/* ══════════════════════════════════════════════
+   MY ROTA — load + render worker's shifts
+══════════════════════════════════════════════ */
+function loadMyRota(workerId){
+  var sb = cloudSb();
+  if(sb){
+    sb.from('manager_state').select('id,data').in('id',['team','rota']).then(function(res){
+      var map = {}; (res.data||[]).forEach(function(r){ map[r.id]=r.data; });
+      var rota = (map.rota&&map.rota.days) ? map.rota : null;
+      renderMyRota(workerId, rota);
+    });
+  } else {
+    renderMyRota(workerId, loadRota());
+  }
+}
+
+function renderMyRota(workerId, rota){
+  var box = document.getElementById('rota-content');
+  if(!rota){
+    box.innerHTML = '<div class="no-shifts"><span class="big">📅</span>No rota published yet.<br>Check back when your manager has set up the week.</div>';
+    document.getElementById('greeting-sub').textContent = 'No rota published yet.';
+    return;
+  }
+
+  /* Find all shifts for this worker */
+  var myShifts = [];
+  DAYS.forEach(function(d){
+    (rota.days[d]||[]).forEach(function(sh){
+      if(sh.workerId === workerId) myShifts.push({ day:d, start:sh.start, end:sh.end });
+    });
+  });
+
+  var weekLabel = rota.weekStart ? ('Week of ' + fmtDate(rota.weekStart)) : 'This week';
+  document.getElementById('greeting-sub').textContent = weekLabel + (rota.publishedAt ? ' · Published' : '');
+
+  if(!myShifts.length){
+    box.innerHTML = '<div class="week-label">' + esc(weekLabel) + '</div>' +
+      '<div class="no-shifts"><span class="big">😴</span>No shifts for you this week.<br>Check back next week or ask your manager.</div>';
+    return;
+  }
+
+  /* Detect today */
+  var todayDow = new Date().toLocaleDateString('en-GB',{weekday:'short'}); // 'Mon', 'Tue' etc.
+
+  var totalHrs = 0;
+  var cards = myShifts.map(function(sh){
+    var hrs = shiftHrs(sh); totalHrs += hrs;
+    var isToday = sh.day === todayDow;
+    /* Date of this shift */
+    var shiftDate = '';
+    if(rota.weekStart){
+      var base = new Date(rota.weekStart+'T00:00');
+      var dayIdx = DAYS.indexOf(sh.day);
+      var d2 = new Date(base); d2.setDate(base.getDate()+dayIdx);
+      shiftDate = d2.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    }
+    return '<div class="shift-card'+(isToday?' today':'')+'">'+
+      '<div class="shift-dot"></div>'+
+      '<div class="shift-info">'+
+        '<div class="shift-day">'+esc(DAYFULL[sh.day])+(shiftDate?' <span style="font-weight:500;color:var(--muted)">'+shiftDate+'</span>':'')+(isToday?' <span style="font-size:0.65rem;background:#000;color:#fff;border-radius:4px;padding:0.1rem 0.45rem;vertical-align:middle;font-weight:800">TODAY</span>':'')+'</div>'+
+        '<div class="shift-time">'+esc(sh.start)+' – '+esc(sh.end)+'</div>'+
+      '</div>'+
+      '<div class="shift-hrs">'+hrs.toFixed(1)+'h</div>'+
+    '</div>';
+  }).join('');
+
+  box.innerHTML = '<div class="week-label">' + esc(weekLabel) + '</div>' + cards +
+    '<div class="total-bar"><span>Total this week</span><strong>' + totalHrs.toFixed(1) + ' hrs</strong></div>';
+}
+
+/* ══════════════════════════════════════════════
+   MANAGER BADGE (new orders count)
+══════════════════════════════════════════════ */
+function loadManagerBadge(){
+  var sb = cloudSb(); if(!sb) return;
+  sb.from('orders').select('*',{count:'exact',head:true}).eq('status','New').then(function(res){
+    var b = document.getElementById('mgr-orders-badge');
+    if(b) b.textContent = res.count ? res.count : '';
+  });
+}
+
+/* ══════════════════════════════════════════════
+   PUSH NOTIFICATIONS
+══════════════════════════════════════════════ */
+function setupNotifUI(){
+  var btn  = document.getElementById('notif-enable-btn');
+  var dis  = document.getElementById('notif-disable-btn');
+  var note = document.getElementById('notif-note');
+  var stat = document.getElementById('notif-status');
+
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+    stat.innerHTML = '<span class="status-pill off">Not supported on this browser</span>';
+    btn.classList.add('hidden');
+    note.textContent = 'Push notifications aren\'t available in this browser. Try Chrome or Safari 16.4+.';
+    return;
+  }
+
+  function refresh(){
+    var perm = Notification.permission;
+    if(perm === 'granted'){
+      stat.innerHTML = '<span class="status-pill on">🔔 Notifications enabled</span>';
+      btn.classList.add('hidden'); dis.classList.remove('hidden');
+    } else if(perm === 'denied'){
+      stat.innerHTML = '<span class="status-pill off">Blocked</span>';
+      btn.classList.add('hidden');
+      note.textContent = 'Notifications are blocked for this site. Enable them in your browser/phone settings, then refresh.';
+    } else {
+      stat.innerHTML = '<span class="status-pill off">Not enabled</span>';
+      btn.classList.remove('hidden'); dis.classList.add('hidden');
+    }
+  }
+  refresh();
+
+  btn.addEventListener('click', function(){
+    Notification.requestPermission().then(function(perm){
+      refresh();
+      if(perm === 'granted'){
+        toast('🔔 Notifications enabled!');
+        /* Subscribe to push (requires a VAPID server — show info if not configured) */
+        navigator.serviceWorker.ready.then(function(reg){
+          /* Store subscription locally for now */
+          reg.pushManager.getSubscription().then(function(sub){
+            if(!sub) note.textContent = 'Notifications are on — your manager needs a push server configured to send them automatically.';
+          });
+        });
+      } else {
+        toast('Notifications were not allowed');
+      }
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════
+   PWA — Install prompt
+══════════════════════════════════════════════ */
+var _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  _deferredPrompt = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+document.getElementById('install-btn').addEventListener('click', function(){
+  if(!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  _deferredPrompt.userChoice.then(function(){ _deferredPrompt = null; });
+  document.getElementById('install-banner').classList.remove('show');
+});
+document.getElementById('install-close').addEventListener('click', function(){
+  document.getElementById('install-banner').classList.remove('show');
+});
+window.addEventListener('appinstalled', function(){
+  document.getElementById('install-banner').classList.remove('show');
+  toast('App installed! 🥧');
+});
+
+/* ══════════════════════════════════════════════
+   SERVICE WORKER REGISTRATION
+══════════════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(function(e){ console.warn('SW reg failed', e); });
+}
+</script>
+</body>
+</html>

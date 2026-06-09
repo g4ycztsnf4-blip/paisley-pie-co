@@ -1,0 +1,37 @@
+{
+  "name": "Paisley Pie Co.",
+  "short_name": "Paisley Pie",
+  "description": "Order fresh Scottish pies online — Causeyside Street, Paisley.",
+  "start_url": "/index.html?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "logo.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Order Online",
+      "short_name": "Order",
+      "description": "Build your order and skip the queue",
+      "url": "/order.html?utm_source=pwa_shortcut",
+      "icons": [{ "src": "logo.png", "sizes": "any" }]
+    },
+    {
+      "name": "Track My Order",
+      "short_name": "Track",
+      "url": "/track.html?utm_source=pwa_shortcut",
+      "icons": [{ "src": "logo.png", "sizes": "any" }]
+    },
+    {
+      "name": "Staff Portal",
+      "short_name": "Staff",
+      "url": "/staff-app.html?utm_source=pwa_shortcut",
+      "icons": [{ "src": "logo.png", "sizes": "any" }]
+    }
+  ],
+  "screenshots": []
+}
